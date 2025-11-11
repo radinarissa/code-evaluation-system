@@ -13,7 +13,7 @@ CREATE TABLE Courses (
     MoodleCourseId INT NOT NULL UNIQUE,
     Name VARCHAR(255) NOT NULL,
     AcademicYear VARCHAR(255) NOT NULL,
-    Semester VARCHAR(255) NOT NULL CHECK (Semester IN ('Fall', 'Spring', 'Summer')),
+    Semester VARCHAR(255) NOT NULL CHECK (Semester IN ('First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth')),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,0 +1,29 @@
+echo .vs/ > .gitignore
+echo bin/ >> .gitignore
+echo obj/ >> .gitignore
+echo *.user >> .gitignore
+echo *.vsidx >> .gitignore
+echo *.suo >> .gitignore
+```
+
+Или просто създай файл `.gitignore` в backend папката с този текст:
+```
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vsidx
+
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# NuGet
+packages/
+*.nupkg
