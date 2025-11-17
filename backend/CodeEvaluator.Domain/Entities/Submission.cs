@@ -5,6 +5,7 @@ public class Submission
     public int Id { get; set; }
     public int TaskId { get; set; }
     public int UserId { get; set; }
+    public int AttemptNumber { get; set; } = 1;
     public DateTime SubmissionTime { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Status { get; set; } = "Pending";

@@ -157,6 +157,7 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("Submissions");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.AttemptNumber).HasDefaultValue(1);
             entity.Property(e => e.SubmissionTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Code).IsRequired();
             entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Pending");
@@ -171,6 +172,14 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.Submissions)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.TaskId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.SubmissionTime);
+            entity.HasIndex(e => new { e.TaskId, e.UserId, e.SubmissionTime });
+            entity.HasIndex(e => new { e.TaskId, e.UserId, e.AttemptNumber }); 
+            entity.HasIndex(e => e.MoodleSyncStatus); 
         });
 
         modelBuilder.Entity<TestResult>(entity =>
