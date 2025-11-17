@@ -93,9 +93,10 @@ CREATE TABLE Submissions (
     Id SERIAL PRIMARY KEY,
     TaskId INT NOT NULL REFERENCES Tasks(Id) ON DELETE CASCADE,
     UserId INT NOT NULL REFERENCES Users(Id) ON DELETE CASCADE,
+    AttemptNumber INT NOT NULL DEFAULT 1,
     SubmissionTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Code TEXT NOT NULL,
-    Status VARCHAR(50) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Processing', 'Completed', 'Error')),
+    Status VARCHAR(50) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Processing', 'Completed', 'Error','Cancelled')),
     FinalGrade DECIMAL(5,2),
     Feedback TEXT,
     CompilationOutput TEXT,
@@ -111,7 +112,7 @@ CREATE TABLE TestResults (
     Id SERIAL PRIMARY KEY,
     TestCaseId INT NOT NULL REFERENCES TestCases(Id) ON DELETE CASCADE,
     SubmissionId INT NOT NULL REFERENCES Submissions(Id) ON DELETE CASCADE,
-    Status VARCHAR(255) NOT NULL CHECK (Status IN ('Pass', 'Fail', 'Timeout', 'Runtime Error', 'Memory Limit', 'Disk Limit', 'Compilation Error')),
+    Status VARCHAR(255) NOT NULL CHECK (Status IN ('PASS', 'FAIL', 'TIME_LIMIT_EXCEEDED', 'RUNTIME_ERROR', 'MEMORY_LIMIT_EXCEEDED', 'DISK_LIMIT_EXCEEDED', 'COMPILATION_ERROR')),
     ExecutionTime FLOAT NOT NULL,
     MemoryUsage FLOAT,
     DiskUsedMb DECIMAL(10,2),
@@ -139,6 +140,8 @@ CREATE INDEX idx_submissions_user ON Submissions(UserId);
 CREATE INDEX idx_submissions_status ON Submissions(Status);
 CREATE INDEX idx_submissions_date ON Submissions(SubmissionTime DESC);
 CREATE INDEX idx_submissions_task_user ON Submissions(TaskId, UserId, SubmissionTime DESC);
+CREATE INDEX idx_submissions_task_user_attempt ON Submissions(TaskId, UserId, AttemptNumber DESC);
+CREATE INDEX idx_submissions_moodle_sync ON Submissions(MoodleSyncStatus);
 CREATE INDEX idx_testresults_submission ON TestResults(SubmissionId);
 CREATE INDEX idx_testresults_testcase ON TestResults(TestCaseId);
 CREATE INDEX idx_testresults_status ON TestResults(Status);
@@ -195,3 +198,18 @@ JOIN Users u ON s.UserId = u.Id
 LEFT JOIN TestResults tr ON s.Id = tr.SubmissionId
 GROUP BY s.Id, s.TaskId, t.Title, s.UserId, u.Username, 
          s.SubmissionTime, s.FinalGrade, t.MaxPoints, s.Status;
+
+CREATE OR REPLACE VIEW TeacherDashboard AS
+SELECT 
+    c.Id as CourseId,
+    c.Name as CourseName,
+    t.Id as TaskId,
+    t.Title as TaskTitle,
+    COUNT(DISTINCT s.UserId) as StudentsSubmitted,
+    AVG(s.FinalGrade) as AverageGrade,
+    MAX(s.SubmissionTime) as LastSubmission
+FROM Courses c
+JOIN Tasks t ON c.Id = t.CourseId
+LEFT JOIN Submissions s ON t.Id = s.TaskId AND s.Status = 'Completed'
+WHERE t.IsActive = TRUE
+GROUP BY c.Id, c.Name, t.Id, t.Title;
