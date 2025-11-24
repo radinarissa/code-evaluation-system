@@ -1,0 +1,6 @@
+@CodeEvaluator.API_HostAddress = http://localhost:5218
+
+GET {{CodeEvaluator.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
