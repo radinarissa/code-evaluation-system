@@ -11,6 +11,7 @@ namespace CodeEvaluator.API.Controllers
         /// Returns all submissions.
         /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<SubmissionResponseDto>), StatusCodes.Status200OK)]
         public IActionResult GetAllSubmissions()
         {
             // TODO: Return a list of SubmissionResponseDto
@@ -21,6 +22,8 @@ namespace CodeEvaluator.API.Controllers
         /// Returns a single submission by its id.
         /// </summary>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(SubmissionResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetSubmissionById(int id)
         {
             // TODO: Return SubmissionResponseDto for the given id
@@ -31,6 +34,8 @@ namespace CodeEvaluator.API.Controllers
         /// Creates a new submission for a task (with Moodle integration fields).
         /// </summary>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult CreateSubmission([FromBody] SubmissionRequestDto request)
         {
             // TODO:
@@ -45,6 +50,9 @@ namespace CodeEvaluator.API.Controllers
         /// Updates an existing submission (if business rules allow it).
         /// </summary>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult UpdateSubmission(int id, [FromBody] SubmissionRequestDto request)
         {
             // TODO: Update submission data if needed
@@ -55,6 +63,8 @@ namespace CodeEvaluator.API.Controllers
         /// Deletes a submission by its id.
         /// </summary>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult DeleteSubmission(int id)
         {
             // TODO: Delete submission with the given id
