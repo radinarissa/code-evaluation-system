@@ -1,11 +1,11 @@
-## Code-evaluation-system
+# Code-evaluation-system
 
-##Table of Contents
-  - [Judge0](#Judge0 setup)
-  - [Postman](#Basics of Judge0 API)
+## Table of Contents
+  - [Judge0](#Judge0setup)
+  - [Postman](#Postman)
 
 
-##Judge0
+## Judge0setup
 в windows търсачката -> turn windows features on or off
 чекваме hyper-v
 (ако липсва като опция:
@@ -89,5 +89,6 @@ cd judge0-v1.13.1
 В windows машинати е на [ip-то което си запазихме някъде преди малко]:2358
 Простичък тест е да напраим crul http://localhost:2358/languages или [ip-то]:2358/languages в терминал.
 
-##Postman
-https://bobber-1e394336-9141436.postman.co/workspace/Judge0-Api-Doc~6f6babdf-1eb2-48d5-9ca4-a81c4f7b9c15/request/50480259-6c1dc079-4676-45fe-b4da-000ee13dfde8?action=share&creator=50480259&ctx=documentation
+## Postman
+Информация за най-основните API calls в judge0
+[Postman workspace](https://bobber-1e394336-9141436.postman.co/workspace/Judge0-Api-Doc~6f6babdf-1eb2-48d5-9ca4-a81c4f7b9c15/request/50480259-6c1dc079-4676-45fe-b4da-000ee13dfde8?action=share&creator=50480259&ctx=documentation)
