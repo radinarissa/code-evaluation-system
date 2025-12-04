@@ -11,6 +11,7 @@ This guide covers how to set up the Code Evaluation System on **macOS** and **Wi
 | Package Manager | Homebrew | - |
 | PostgreSQL | `brew install postgresql@15` | Download installer |
 | .NET 8 SDK | `brew install dotnet@8` | Download installer |
+| Node.js | `brew install node` | Download installer |
 | Web Browser | Any | Any |
 
 ---
@@ -239,7 +240,68 @@ Backend will be available at:
 
 The frontend uses vanilla HTML/JS with Tailwind CSS (via CDN). No build step required.
 
-### Open in Browser
+### Install Node.js (Recommended)
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+brew install node
+```
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+1. Download Node.js from https://nodejs.org/ (LTS version recommended)
+2. Run the installer
+3. Restart terminal/PowerShell after installation
+
+Verify:
+```powershell
+node --version
+```
+</details>
+
+### Run Frontend with Local Server (Recommended)
+
+Running on localhost is recommended over opening as a file, especially when connecting to the API.
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+cd frontend
+npx serve
+```
+
+Or with a specific port:
+```bash
+npx serve -p 3000
+```
+
+Frontend will be available at http://localhost:3000
+</details>
+
+<details>
+<summary><strong>Windows (PowerShell)</strong></summary>
+
+```powershell
+cd frontend
+npx serve
+```
+
+Or with a specific port:
+```powershell
+npx serve -p 3000
+```
+
+Frontend will be available at http://localhost:3000
+</details>
+
+### Alternative: Open as File
+
+If you don't have Node.js, you can open the HTML file directly (some features may be limited):
 
 <details>
 <summary><strong>macOS</strong></summary>
@@ -261,12 +323,13 @@ start frontend\index.html
 Or double-click `frontend\index.html` in File Explorer.
 </details>
 
-### Development Mode
+### Switching to Real API
 
 The frontend currently uses mock data. To switch to real API when ready:
 
 1. Open `frontend/js/config.js`
 2. Change `USE_MOCK_DATA: true` to `USE_MOCK_DATA: false`
+3. Ensure backend is running at http://localhost:5218
 
 ---
 
@@ -315,8 +378,9 @@ dotnet ef database update --project CodeEvaluator.Infrastructure --startup-proje
 cd CodeEvaluator.API
 dotnet run &
 
-# 5. Open frontend
-open ../frontend/index.html
+# 5. Start frontend (in new terminal)
+cd ../frontend
+npx serve -p 3000
 ```
 
 ### Windows (PowerShell)
@@ -335,8 +399,9 @@ dotnet ef database update --project CodeEvaluator.Infrastructure --startup-proje
 cd CodeEvaluator.API
 Start-Process dotnet -ArgumentList "run"
 
-# 5. Open frontend
-start ..\frontend\index.html
+# 5. Start frontend (in new terminal)
+cd ..\frontend
+npx serve -p 3000
 ```
 
 ---
