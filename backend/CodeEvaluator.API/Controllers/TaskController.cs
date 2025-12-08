@@ -7,6 +7,13 @@ namespace CodeEvaluator.API.Controllers
     [Route("api/tasks")]
     public class TaskController : ControllerBase
     {
+        private readonly ITaskService _taskService;
+
+        public AssignmentController(ITaskService taskService)
+        {
+            _taskService = taskService;
+        }
+
         /// <summary>
         /// Returns all tasks.
         /// </summary>
@@ -36,10 +43,10 @@ namespace CodeEvaluator.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateTask([FromBody] TaskRequestDto request)
+        public IActionResult CreateTask([FromBody] TaskRequestDto dto)
         {
-            // TODO: Map TaskRequestDto to domain model and create a new task
-            return StatusCode(501, "Not implemented");
+            var assignment = await _taskService.CreateAssignmentAsync(dto);
+            return Ok(assignment);
         }
 
         /// <summary>

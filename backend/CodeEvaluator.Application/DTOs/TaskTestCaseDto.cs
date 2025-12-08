@@ -1,4 +1,4 @@
-namespace CodeEvaluator.API.DTOs
+namespace CodeEvaluator.Application.DTOs
 {
     /// <summary>
     /// Represents a single test case for a programming task.

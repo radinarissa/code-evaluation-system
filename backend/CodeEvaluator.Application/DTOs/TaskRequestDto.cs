@@ -1,4 +1,4 @@
-namespace CodeEvaluator.API.DTOs
+namespace CodeEvaluator.Application.DTOs
 {
     /// <summary>
     /// Input model used when creating or updating a programming task.

@@ -7,6 +7,13 @@ namespace CodeEvaluator.API.Controllers
     [Route("api/submissions")]
     public class SubmissionController : ControllerBase
     {
+        private readonly ISubmissionService _submissionService;
+
+        public SubmissionController(ISubmissionService submissionService)
+        {
+            _submissionService = submissionService;
+        }
+
         /// <summary>
         /// Returns all submissions.
         /// </summary>
@@ -36,14 +43,10 @@ namespace CodeEvaluator.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateSubmission([FromBody] SubmissionRequestDto request)
+        public IActionResult CreateSubmission([FromBody] SubmissionRequestDto dto)
         {
-            // TODO:
-            //  - validate request
-            //  - run tests in sandbox
-            //  - calculate score and feedback
-            //  - optionally sync result back to Moodle
-            return StatusCode(501, "Not implemented");
+            var submission = await _submissionService.CreateSubmissionAndRunJudge0Async(dto);
+            return Ok(submission);
         }
 
         /// <summary>

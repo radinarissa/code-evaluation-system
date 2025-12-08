@@ -1,4 +1,4 @@
-namespace CodeEvaluator.API.DTOs
+namespace CodeEvaluator.Application.DTOs
 {
     /// <summary>
     /// Input model used when a student submits a solution for a task.

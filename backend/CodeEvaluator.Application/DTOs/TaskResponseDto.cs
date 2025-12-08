@@ -1,4 +1,4 @@
-namespace CodeEvaluator.API.DTOs
+namespace CodeEvaluator.Application.DTOs
 {
     /// <summary>
     /// Output model returned by the API when reading task data.
