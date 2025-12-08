@@ -150,7 +150,6 @@ CREATE INDEX idx_submissions_task_user ON Submissions(TaskId, UserId, Submission
 CREATE INDEX idx_submissions_task_user_attempt ON Submissions(TaskId, UserId, AttemptNumber DESC);
 CREATE INDEX idx_submissions_moodle_sync ON Submissions(MoodleSyncStatus);
 
-
 CREATE INDEX idx_testresults_submission ON TestResults(SubmissionId);
 CREATE INDEX idx_testresults_testcase ON TestResults(TestCaseId);
 CREATE INDEX idx_testresults_status ON TestResults(Status);
