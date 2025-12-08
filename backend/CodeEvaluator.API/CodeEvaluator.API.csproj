@@ -24,4 +24,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties properties_4launchsettings_1json__JsonSchema="https://app.ona.com/jsonschema/v1/automations_file.jsonschema.json" /></VisualStudio></ProjectExtensions>
+
 </Project>
