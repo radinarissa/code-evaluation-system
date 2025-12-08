@@ -11,6 +11,15 @@ const I18n = {
             appTitle: 'Code Evaluator',
             teacherDashboard: 'Табло на преподавателя',
 
+            // Login
+            login: 'Вход',
+            username: 'Потребителско име',
+            password: 'Парола',
+            enterUsername: 'Въведете потребителско име',
+            enterPassword: 'Въведете парола',
+            invalidCredentials: 'Невалидно потребителско име или парола',
+            logout: 'Изход',
+
             // Navigation
             dashboard: 'Табло',
             submissions: 'Предавания',
@@ -85,6 +94,15 @@ const I18n = {
             // App
             appTitle: 'Code Evaluator',
             teacherDashboard: 'Teacher Dashboard',
+
+            // Login
+            login: 'Login',
+            username: 'Username',
+            password: 'Password',
+            enterUsername: 'Enter username',
+            enterPassword: 'Enter password',
+            invalidCredentials: 'Invalid username or password',
+            logout: 'Logout',
 
             // Navigation
             dashboard: 'Dashboard',

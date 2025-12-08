@@ -9,6 +9,36 @@ const App = {
      * Initialize the application
      */
     async init() {
+        // Check authentication state
+        if (Auth.isLoggedIn()) {
+            this.showMainApp();
+        } else {
+            this.showLogin();
+        }
+    },
+
+    /**
+     * Show login page
+     */
+    showLogin() {
+        document.getElementById('login-container').classList.remove('hidden');
+        document.getElementById('main-app').classList.add('hidden');
+
+        // Render login view
+        document.getElementById('login-container').innerHTML = LoginView.render();
+        LoginView.setupHandlers();
+    },
+
+    /**
+     * Show main application
+     */
+    showMainApp() {
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+
+        // Update user info in sidebar
+        this.updateUserInfo();
+
         // Set current date
         this.updateDate();
 
@@ -18,8 +48,43 @@ const App = {
         // Setup language switcher
         this.setupLanguageSwitcher();
 
+        // Setup logout handler
+        this.setupLogout();
+
         // Initialize with default language and view
         this.switchLanguage(Config.DEFAULT_LANGUAGE);
+    },
+
+    /**
+     * Update user info in sidebar
+     */
+    updateUserInfo() {
+        const user = Auth.getUser();
+        if (user) {
+            const nameElement = document.getElementById('user-name');
+            const initialsElement = document.getElementById('user-initials');
+
+            if (nameElement) {
+                nameElement.textContent = Auth.getDisplayName();
+            }
+            if (initialsElement) {
+                initialsElement.textContent = Auth.getInitials();
+            }
+        }
+    },
+
+    /**
+     * Setup logout handler
+     */
+    setupLogout() {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                Auth.logout();
+                this.showLogin();
+            });
+        }
     },
 
     /**

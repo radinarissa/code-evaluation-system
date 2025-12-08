@@ -19,6 +19,13 @@
     </script>
 </head>
 <body class="bg-gray-100">
+    <!-- Login Container -->
+    <div id="login-container" class="hidden">
+        <!-- Login content will be injected here -->
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="main-app" class="hidden">
     <div class="flex h-screen">
         <!-- Sidebar -->
         <aside class="w-64 bg-secondary text-white flex flex-col">
@@ -65,14 +72,21 @@
             </nav>
 
             <div class="p-4 border-t border-gray-700">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                        <span class="text-white font-semibold">ИП</span>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                            <span id="user-initials" class="text-white font-semibold">GG</span>
+                        </div>
+                        <div class="ml-3">
+                            <p id="user-name" class="text-sm font-medium">Georgi Georgiev</p>
+                            <p id="user-role" class="text-xs text-gray-400">Преподавател</p>
+                        </div>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium">Иван Петров</p>
-                        <p id="user-role" class="text-xs text-gray-400">Преподавател</p>
-                    </div>
+                    <button id="logout-btn" class="text-gray-400 hover:text-white transition" title="Logout">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </aside>
@@ -107,6 +121,7 @@
             </div>
         </main>
     </div>
+    </div>
 
     <!-- Scripts - Order matters! -->
     <!-- 1. Configuration -->
@@ -115,20 +130,24 @@
     <!-- 2. Internationalization -->
     <script src="js/i18n.js"></script>
 
-    <!-- 3. Utilities -->
+    <!-- 3. Authentication -->
+    <script src="js/auth.js"></script>
+
+    <!-- 4. Utilities -->
     <script src="js/utils.js"></script>
 
-    <!-- 4. Services -->
+    <!-- 5. Services -->
     <script src="js/services/mockData.js"></script>
     <script src="js/services/api.js"></script>
 
-    <!-- 5. Views -->
+    <!-- 6. Views -->
+    <script src="js/views/login.js"></script>
     <script src="js/views/dashboard.js"></script>
     <script src="js/views/submissions.js"></script>
     <script src="js/views/tasks.js"></script>
     <script src="js/views/students.js"></script>
 
-    <!-- 6. Main Application -->
+    <!-- 7. Main Application -->
     <script src="js/app.js"></script>
 </body>
 </html>
