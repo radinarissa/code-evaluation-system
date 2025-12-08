@@ -5,7 +5,7 @@ public class TestResult
     public int Id { get; set; }
     public int TestCaseId { get; set; }
     public int SubmissionId { get; set; }
-    public string Status { get; set; } = string.Empty; 
+    public string Status { get; set; } = string.Empty;
     public float ExecutionTime { get; set; }
     public float? MemoryUsage { get; set; }
     public decimal? DiskUsedMb { get; set; }
