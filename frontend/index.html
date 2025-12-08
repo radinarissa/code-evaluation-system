@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Evaluator - Табло на преподавателя</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <!-- Login Container -->
+    <div id="login-container" class="hidden">
+        <!-- Login content will be injected here -->
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="main-app" class="hidden">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-secondary text-white flex flex-col">
+            <div class="p-4 border-b border-gray-700">
+                <h1 id="app-title" class="text-xl font-bold">Code Evaluator</h1>
+                <p id="app-subtitle" class="text-sm text-gray-400">Табло на преподавателя</p>
+            </div>
+
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" data-view="dashboard" class="nav-link flex items-center px-4 py-2 rounded-lg bg-primary text-white">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                            <span>Табло</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-view="submissions" class="nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700 text-gray-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span>Предавания</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-view="tasks" class="nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700 text-gray-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            <span>Задачи</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-view="students" class="nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700 text-gray-300">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            <span>Студенти</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                            <span id="user-initials" class="text-white font-semibold">GG</span>
+                        </div>
+                        <div class="ml-3">
+                            <p id="user-name" class="text-sm font-medium">Georgi Georgiev</p>
+                            <p id="user-role" class="text-xs text-gray-400">Преподавател</p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="text-gray-400 hover:text-white transition" title="Logout">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h2 id="page-title" class="text-2xl font-semibold text-gray-800">Табло</h2>
+                    <div class="flex items-center space-x-4">
+                        <!-- Language Switcher -->
+                        <div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                            <button data-lang="bg" class="lang-btn px-3 py-1 text-sm rounded-md bg-primary text-white transition">
+                                BG
+                            </button>
+                            <button data-lang="en" class="lang-btn px-3 py-1 text-sm rounded-md text-gray-600 hover:bg-gray-200 transition">
+                                EN
+                            </button>
+                        </div>
+                        <span class="text-sm text-gray-500" id="current-date"></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div id="content" class="p-6">
+                <!-- Content will be injected here by JavaScript -->
+                <div class="flex items-center justify-center h-64">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    </div>
+
+    <!-- Scripts - Order matters! -->
+    <!-- 1. Configuration -->
+    <script src="js/config.js"></script>
+
+    <!-- 2. Internationalization -->
+    <script src="js/i18n.js"></script>
+
+    <!-- 3. Authentication -->
+    <script src="js/auth.js"></script>
+
+    <!-- 4. Utilities -->
+    <script src="js/utils.js"></script>
+
+    <!-- 5. Services -->
+    <script src="js/services/mockData.js"></script>
+    <script src="js/services/api.js"></script>
+
+    <!-- 6. Views -->
+    <script src="js/views/login.js"></script>
+    <script src="js/views/dashboard.js"></script>
+    <script src="js/views/submissions.js"></script>
+    <script src="js/views/tasks.js"></script>
+    <script src="js/views/students.js"></script>
+
+    <!-- 7. Main Application -->
+    <script src="js/app.js"></script>
+</body>
+</html>
