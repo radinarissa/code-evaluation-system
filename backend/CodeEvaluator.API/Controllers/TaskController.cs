@@ -1,4 +1,5 @@
-using CodeEvaluator.API.DTOs;
+using CodeEvaluator.Application.Interfaces.Services;
+using CodeEvaluator.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeEvaluator.API.Controllers
@@ -9,7 +10,7 @@ namespace CodeEvaluator.API.Controllers
     {
         private readonly ITaskService _taskService;
 
-        public AssignmentController(ITaskService taskService)
+        public TaskController(ITaskService taskService)
         {
             _taskService = taskService;
         }
@@ -43,7 +44,7 @@ namespace CodeEvaluator.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateTask([FromBody] TaskRequestDto dto)
+        public async Task<IActionResult> CreateTask([FromBody] TaskRequestDto dto)
         {
             var assignment = await _taskService.CreateAssignmentAsync(dto);
             return Ok(assignment);

@@ -1,4 +1,4 @@
-using CodeEvaluator.API.DTOs;
+using CodeEvaluator.Application.DTOs;
 using FluentValidation;
 
 namespace CodeEvaluator.API.Validators

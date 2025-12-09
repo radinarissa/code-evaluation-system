@@ -1,4 +1,5 @@
-using CodeEvaluator.API.DTOs;
+using CodeEvaluator.Application.Interfaces.Services;
+using CodeEvaluator.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeEvaluator.API.Controllers
@@ -43,7 +44,7 @@ namespace CodeEvaluator.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateSubmission([FromBody] SubmissionRequestDto dto)
+        public async Task<IActionResult> CreateSubmission([FromBody] SubmissionRequestDto dto)
         {
             var submission = await _submissionService.CreateSubmissionAndRunJudge0Async(dto);
             return Ok(submission);

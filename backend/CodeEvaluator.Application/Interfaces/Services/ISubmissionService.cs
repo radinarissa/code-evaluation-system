@@ -1,9 +1,10 @@
 ﻿using CodeEvaluator.Application.DTOs;
+using CodeEvaluator.Domain.Entities;
 
 namespace CodeEvaluator.Application.Interfaces.Services
 {
-    internal interface ISubmissionService
+    public interface ISubmissionService
     {
-        Task<Domain.Entities.Submission> CreateAssignmentAsync(SubmissionRequestDto dto);
+        Task<Submission> CreateSubmissionAndRunJudge0Async(SubmissionRequestDto dto);
     }
 }

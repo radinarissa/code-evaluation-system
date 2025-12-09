@@ -3,8 +3,8 @@ using CodeEvaluator.Application.DTOs;
 
 namespace CodeEvaluator.Application.Interfaces.Services
 {
-    internal interface IJudge0Service
+    public interface IJudge0Service
     {
-        Task<SubmissionRequestDto> ExecuteCodeAsync(Submission submission);
+        Task<Judge0ResultDto> ExecuteCodeAsync(Submission submission);
     }
 }

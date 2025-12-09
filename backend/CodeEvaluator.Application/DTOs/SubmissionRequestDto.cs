@@ -30,7 +30,7 @@ namespace CodeEvaluator.Application.DTOs
         /// <summary>
         /// User identifier in Moodle.
         /// </summary>
-        public string MoodleUserId { get; set; } = default!;
+        public int MoodleUserId { get; set; } = default!;
 
         /// <summary>
         /// Course identifier in Moodle.
@@ -40,7 +40,7 @@ namespace CodeEvaluator.Application.DTOs
         /// <summary>
         /// Assignment identifier in Moodle.
         /// </summary>
-        public string MoodleAssignmentId { get; set; } = default!;
+        public int MoodleAssignmentId { get; set; } = default!;
 
         /// <summary>
         /// Optional attempt number in Moodle.
