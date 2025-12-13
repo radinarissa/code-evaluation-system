@@ -9,7 +9,7 @@ namespace CodeEvaluator.Application.DTOs
 
         public int TaskId { get; set; }
 
-        public string StudentId { get; set; } = default!;
+        public int StudentId { get; set; } = default!;
 
         public string Language { get; set; } = default!;
 
@@ -23,7 +23,7 @@ namespace CodeEvaluator.Application.DTOs
         /// <summary>
         /// Score awarded for this submission (0..MaxPoints).
         /// </summary>
-        public int Score { get; set; }
+        public decimal? Score { get; set; }
 
         /// <summary>
         /// Textual feedback that can be sent back to Moodle.

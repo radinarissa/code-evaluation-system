@@ -1,6 +1,8 @@
 using CodeEvaluator.Application.Interfaces.Services;
 using CodeEvaluator.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using CodeEvaluator.Domain.Entities;
 
 namespace CodeEvaluator.API.Controllers
 {
@@ -22,8 +24,16 @@ namespace CodeEvaluator.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<SubmissionResponseDto>), StatusCodes.Status200OK)]
         public IActionResult GetAllSubmissions()
         {
-            // TODO: Return a list of SubmissionResponseDto
-            return StatusCode(501, "Not implemented");
+            List<Submission> submissions = _submissionService.GetAllSubmissions();
+            var responseDtos = new List<SubmissionResponseDto>();
+            foreach (var i in submissions)
+            {
+                SubmissionResponseDto responseDto = _submissionService.ConvertSubmissiontoSubmissionResponseDto(i);
+                responseDtos.Add(responseDto);
+            }
+
+            return Ok(responseDtos);
+
         }
 
         /// <summary>
@@ -32,10 +42,14 @@ namespace CodeEvaluator.API.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(SubmissionResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetSubmissionById(int id)
+        public async Task<IActionResult> GetSubmissionById(int id)
         {
-            // TODO: Return SubmissionResponseDto for the given id
-            return StatusCode(501, "Not implemented");
+           var submission = await _submissionService.GetSubmissionByIdAsync(id);
+           if (submission == null)
+                return NotFound();
+            SubmissionResponseDto responseDto = _submissionService.ConvertSubmissiontoSubmissionResponseDto(submission);
+              return Ok(responseDto);
+          
         }
 
         /// <summary>
@@ -57,22 +71,29 @@ namespace CodeEvaluator.API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult UpdateSubmission(int id, [FromBody] SubmissionRequestDto request)
+        public async Task<IActionResult> UpdateSubmission(int id, [FromBody] SubmissionRequestDto request)
         {
-            // TODO: Update submission data if needed
+        
+
             return StatusCode(501, "Not implemented");
         }
 
         /// <summary>
         /// Deletes a submission by its id.
-        /// </summary>
+        /// </summary> 
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult DeleteSubmission(int id)
+        public async Task<IActionResult> DeleteSubmission(int id)
         {
             // TODO: Delete submission with the given id
-            return StatusCode(501, "Not implemented");
+            var a = await _submissionService.DeleteSubmissionAsync(id);
+            return a switch
+            {
+                ISubmissionService.Status.Success => NoContent(),
+                ISubmissionService.Status.NotFound => NotFound(),
+                _ => StatusCode(500, "An error occurred while deleting the submission.")
+            };
         }
     }
 }

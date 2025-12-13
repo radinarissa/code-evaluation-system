@@ -3,34 +3,44 @@ using CodeEvaluator.Application.DTOs;
 using CodeEvaluator.Application.Interfaces.Services;
 using CodeEvaluator.Domain.Entities;
 using Newtonsoft.Json;
+using CodeEvaluator.Judge0.Client;
+using System.Threading.Tasks;
+
 
 namespace CodeEvaluator.Application.Services
 {
     internal class Judge0Service : IJudge0Service
     {
-        private readonly HttpClient _http;
 
-        public Judge0Service(HttpClient http)
+        private readonly Judge0Client _judge0Client;
+        public Judge0Service(Judge0Client client)
         {
-            _http = http;
+          _judge0Client = client;
         }
 
-        public async Task<Judge0ResultDto> ExecuteCodeAsync(Submission submission)
+        public async Task<Judge0ResultDto> ExecuteCodeAsync(Judge0SubmissionDTO submission)
         {
             var payload = new
             {
-                source_code = submission.Code,
-                language_id = 51,
+                source_code = Utils.ToBase64(submission.SourceCode),
+                language_id = submission.LanguageId,
+                cpu_time_limit = submission.CpuTimeLimit,
+                memory_limit = submission.MemoryLimit,
+                stack_limit = submission.StackLimit,
+                stdin = submission.StdIn,
+                expected_output = submission.ExpectedOutput
             };
+            
 
             var json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _judge0Client.SendSubmissionAsync(json);
 
-            // Using ?wait=true so Judge0 returns the finished execution results in one request
-            var response = await _http.PostAsync("/submissions?wait=true", content);
-            var responseBody = await response.Content.ReadAsStringAsync();
-
-            return JsonConvert.DeserializeObject<Judge0ResultDto>(responseBody)!;
+           return JsonConvert.DeserializeObject<Judge0ResultDto>(response)!;
+        }
+        public async Task<Judge0SubmissionDTO> GetSubmissionResponseDtoFromJudge0(string token)
+        {
+            var response = await _judge0Client.GetSubmissionByTokenAsync(token);
+            return JsonConvert.DeserializeObject<Judge0SubmissionDTO>(response)!;
         }
     }
 }

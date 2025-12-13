@@ -1,5 +1,6 @@
 
-
+namespace CodeEvaluator.Judge0.Client
+{
 public static class Judge0Config
 {
     public static string BaseUrl {get; set;}
@@ -18,4 +19,5 @@ public static class Judge0Config
 
         BaseUrl = baseUrl.TrimEnd('/');
     }
+}
 }

@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\CodeEvaluator.Domain\CodeEvaluator.Domain.csproj" />
     <ProjectReference Include="..\CodeEvaluator.Infrastructure\CodeEvaluator.Infrastructure.csproj" />
+    <ProjectReference Include="..\Judge0Client\Judge0.csproj" />
+
   </ItemGroup>
 
   <ItemGroup>
