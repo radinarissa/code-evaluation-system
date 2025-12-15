@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/assign/submission/codeeval/db" VERSION="2025111800" COMMENT="CodeEval submission tables"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <TABLES>
+        <TABLE NAME="assignsubmission_codeeval" COMMENT="CodeEval code submissions">
+            <FIELDS>
+                <FIELD NAME="id"           TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="assignment"   TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="submission"   TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="userid"       TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="sourcecode"   TYPE="text" NOTNULL="false" />
+                <FIELD NAME="grade"        TYPE="number" LENGTH="10" NOTNULL="false" DECIMALS="2" />
+                <FIELD NAME="timecreated"  TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="assign_sub" FIELDS="assignment,submission" UNIQUE="false"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
+</XMLDB>
