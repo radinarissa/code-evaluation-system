@@ -1,0 +1,20 @@
+﻿@model CodeEvaluator.API.Models.LoginViewModel
+
+<form method="post">
+    <div>
+        <label>Username</label>
+        <input asp-for="Username" />
+    </div>
+
+    <div>
+        <label>Password</label>
+        <input asp-for="Password" type="password" />
+    </div>
+
+    @if (Model.Error != null)
+    {
+        <p style="color:red">@Model.Error</p>
+    }
+
+    <button type="submit">Login with Moodle</button>
+</form>

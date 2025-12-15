@@ -23,7 +23,7 @@ namespace CodeEvaluator.Application.Services
             var submission = new Submission
             {
                 TaskId = dto.TaskId,
-                MoodleSubmissionId = dto.MoodleAssignmentId,
+                MoodleSubmissionId = dto.MoodleSubmissionId,
                 Code = dto.SourceCode,
                 UserId = dto.MoodleUserId,
                 AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault()

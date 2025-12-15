@@ -8,6 +8,7 @@ using CodeEvaluator.Application.Interfaces.Services;
 using Microsoft.OpenApi.Models;
 using CodeEvaluator.Application.Services;
 using CodeEvaluator.Judge0.Client;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +44,16 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IJudge0Service, Judge0Service>();
 builder.Services.AddScoped<Judge0Client>();
 
+builder.Services.AddHttpClient<IMoodleAuthService, MoodleAuthService>();
+
+builder.Services.AddAuthentication(
+        CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+    });
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -52,6 +63,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
