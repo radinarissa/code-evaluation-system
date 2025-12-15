@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Reflection;
+using CodeEvaluator.Application.Interfaces.Services;
 using Microsoft.OpenApi.Models;
+using CodeEvaluator.Application.Services;
+using CodeEvaluator.Judge0.Client;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +35,11 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+builder.Services.AddScoped<ISubmissionService, SubmissionService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IJudge0Service, Judge0Service>();
+builder.Services.AddScoped<Judge0Client>();
 
 var app = builder.Build();
 

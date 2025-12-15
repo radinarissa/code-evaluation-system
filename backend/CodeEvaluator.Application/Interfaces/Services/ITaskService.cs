@@ -4,6 +4,6 @@ namespace CodeEvaluator.Application.Interfaces.Services
 {
     public interface ITaskService
     {
-        Task<Domain.Entities.Task> CreateAssignmentAsync(TaskRequestDto dto);
+        public Task<Domain.Entities.Task> CreateAssignmentAsync(TaskRequestDto dto);
     }
 }

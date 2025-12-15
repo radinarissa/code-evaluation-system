@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CodeEvaluator.Application.Services
 {
-    internal class Judge0Service : IJudge0Service
+    public class Judge0Service : IJudge0Service
     {
 
         private readonly Judge0Client _judge0Client;

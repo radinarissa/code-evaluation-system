@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CodeEvaluator.Application.Services
 {
-    internal class SubmissionService : ISubmissionService
+    public class SubmissionService : ISubmissionService
     {
         private readonly ApplicationDbContext _db;
         private readonly IJudge0Service _judge0Service;
