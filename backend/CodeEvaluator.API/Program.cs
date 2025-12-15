@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using CodeEvaluator.Application.Interfaces.Services;
 using Microsoft.OpenApi.Models;
 using CodeEvaluator.Application.Services;
@@ -15,7 +16,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(x =>
+    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

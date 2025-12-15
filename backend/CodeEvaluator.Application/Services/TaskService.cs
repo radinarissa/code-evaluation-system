@@ -30,7 +30,13 @@ namespace CodeEvaluator.Application.Services
                 UpdatedAt = dto.UpdatedAt,
                 Title = dto.Title,
                 MemoryLimitMb = dto.MemoryLimitMb,
-                CourseId = dto.CourseId
+                MoodleCourseId = dto.CourseId,
+                TestCases = dto.TestCases.Select(x => new Domain.Entities.TestCase
+                {
+                    Name = x.Name,
+                    Input = x.InputFilePath,
+                    ExpectedOutput = x.OutputFilePath,
+                }).ToList()
             };
 
             _db.Tasks.Add(assignment);
