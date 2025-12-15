@@ -12,7 +12,6 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public ICollection<CourseEnrollment> Enrollments { get; set; } = new List<CourseEnrollment>();
     public ICollection<Task> CreatedTasks { get; set; } = new List<Task>();
     public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     public ICollection<ReferenceSolution> ReferenceSolutions { get; set; } = new List<ReferenceSolution>();
