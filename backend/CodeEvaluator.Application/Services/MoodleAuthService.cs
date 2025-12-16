@@ -8,8 +8,8 @@ namespace CodeEvaluator.Application.Services
     {
         private readonly HttpClient _http;
 
-        private const string MoodleTokenUrl =
-            "https://fpmi.bg/moodle/login/token.php";
+        private const string MoodleUrl =
+            "https://fpmi.bg/moodle";
 
         private const string ServiceName = "DotNetAuth";
 
@@ -23,7 +23,7 @@ namespace CodeEvaluator.Application.Services
             string password)
         {
             var response = await _http.PostAsync(
-                $"{MoodleTokenUrl}?service={ServiceName}" +
+                $"{MoodleUrl}/login/token.php?service={ServiceName}" +
                 $"&username={username}&password={password}",
                 null);
 
@@ -58,7 +58,7 @@ namespace CodeEvaluator.Application.Services
         {
             // 1️⃣ Get user ID
             var siteInfo = await _http.GetFromJsonAsync<SiteInfoResponse>(
-                $"https://YOURMOODLE/webservice/rest/server.php" +
+                $"{MoodleUrl}/webservice/rest/server.php" +
                 $"?wstoken={token}" +
                 $"&wsfunction=core_webservice_get_site_info" +
                 $"&moodlewsrestformat=json");
