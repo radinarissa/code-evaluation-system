@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net.Http.Json;
 using CodeEvaluator.Application.DTOs;
 using CodeEvaluator.Application.Interfaces.Services;
 
@@ -14,7 +9,7 @@ namespace CodeEvaluator.Application.Services
         private readonly HttpClient _http;
 
         private const string MoodleTokenUrl =
-            "https://YOURMOODLE/login/token.php";
+            "https://fpmi.bg/moodle/login/token.php";
 
         private const string ServiceName = "DotNetAuth";
 
