@@ -54,11 +54,30 @@ namespace CodeEvaluator.Application.Services
             };
         }
 
+        public async Task<int> GetUserIdAsync(string token)
+        {
+            // 1️⃣ Get user ID
+            var siteInfo = await _http.GetFromJsonAsync<SiteInfoResponse>(
+                $"https://YOURMOODLE/webservice/rest/server.php" +
+                $"?wstoken={token}" +
+                $"&wsfunction=core_webservice_get_site_info" +
+                $"&moodlewsrestformat=json");
+
+            return siteInfo?.UserId ?? 0;
+        }
+
         private class MoodleTokenResponse
         {
             public string? Token { get; set; }
             public string? Error { get; set; }
         }
+
+        private class SiteInfoResponse
+        {
+            public int UserId { get; set; }
+            public string Username { get; set; } = "";
+        }
+
     }
 
 }

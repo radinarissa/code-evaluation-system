@@ -35,9 +35,12 @@ namespace CodeEvaluator.API.Controllers
                 return View(model);
             }
 
+            var userId = await _moodleAuth.GetUserIdAsync(result.Token);
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, model.Username),
+                new Claim("MoodleUserId", userId.ToString()),
                 new Claim("MoodleToken", result.Token!)
             };
 

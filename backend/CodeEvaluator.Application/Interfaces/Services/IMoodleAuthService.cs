@@ -10,5 +10,6 @@ namespace CodeEvaluator.Application.Interfaces.Services
     public interface IMoodleAuthService
     {
         Task<MoodleAuthResult> AuthenticateAsync(string username, string password);
+        Task<int> GetUserIdAsync(string token);
     }
 }
