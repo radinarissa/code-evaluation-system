@@ -9,7 +9,7 @@ namespace CodeEvaluator.Application.Services
         private readonly HttpClient _http;
 
         private const string MoodleUrl =
-            "https://fpmi.bg/moodle";
+            "http://localhost:8000"; //промени на https://fpmi.bg/moodle 
 
         private const string ServiceName = "DotNetAuth";
 

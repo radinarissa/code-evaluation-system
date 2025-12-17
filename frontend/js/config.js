@@ -4,7 +4,7 @@
  */
 const Config = {
     // Set to false when API is ready
-    USE_MOCK_DATA: true,
+    USE_MOCK_DATA: false,
 
     // API Configuration
     API_BASE_URL: 'http://localhost:5218/api',
