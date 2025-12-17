@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-REPO_PLUGIN_DIR="$HOME/project/code-evaluation-system/moodle-plugin/assignsubmission_codeeval"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 MOODLE_PLUGIN_DIR="$HOME/moodle-dev/moodle/mod/assign/submission/codeeval"
 
 # =================================
