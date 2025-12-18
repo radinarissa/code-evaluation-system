@@ -30,6 +30,7 @@ public class Judge0PollingService : BackgroundService
 
             Console.WriteLine("Polling Judge0 for pending results: ");
             var pendingResults = await db.TestResults
+                .Include(r => r.Submission)
                 .Where(r => r.Status == "Pending" && r.Judge0Token != null)
                 .ToListAsync(stoppingToken);
             Console.WriteLine("Found: " + pendingResults.Count);
@@ -69,9 +70,18 @@ public class Judge0PollingService : BackgroundService
 
 
                         // TestResultCs also keeps instances of the TestCase and The Submission?
+
+                        var allresultsforsubmission = db.TestResults.Where(sb=>sb.SubmissionId == testResult.Submission.Id);
+                       bool alldone = allresultsforsubmission.All(ares => ares.Status != "Pending");
+                     
+                     
+                        if(alldone){
+                            testResult.Submission.Status="Completed";
+                         
+                        }
                 }
 
-              
+
             }
             // Wait before next poll
             await db.SaveChangesAsync(stoppingToken);

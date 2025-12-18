@@ -18,7 +18,7 @@ namespace CodeEvaluator.Application.Services
         public Judge0Service(Judge0Client client)
         {
           _judge0Client = client;
-          Judge0Config.SetBaseUrl("http://172.21.229.127:2358");
+          Judge0Config.SetBaseUrl("http://172.30.249.186:2358");
         }
 
         public async Task<Judge0ResultDto> ExecuteCodeAsync(Judge0SubmissionDTO submission)

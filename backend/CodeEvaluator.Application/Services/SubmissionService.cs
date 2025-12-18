@@ -20,27 +20,34 @@ namespace CodeEvaluator.Application.Services
 
         public async Task<Submission> CreateSubmissionAndRunJudge0Async(SubmissionRequestDto dto)
         {
-            var submission = new Submission
-            {
-                TaskId = dto.MoodleAssignmentId,
-                Code = dto.SourceCode,
-                UserId = dto.MoodleUserId,
-                AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault(),
-                SubmissionTime = DateTime.UtcNow,
-                Status = "Pending",
-                
+            var task = await _db.Tasks.FindAsync(dto.TaskId);
+            if (task == null) throw new Exception("Task not found");
+           var submission = new Submission
+            {   
+             Task = task,                     
+             Code = dto.SourceCode,
+             UserId = dto.StudentId,
+             AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault(1),
+             SubmissionTime = DateTime.UtcNow,
+             Status = "Pending",
             };
 
             _db.Submissions.Add(submission);
             await _db.SaveChangesAsync();
 
             List<TestCase> testCases = await _db.TestCases
-                .Where(tc => tc.TaskId == dto.MoodleAssignmentId)
+                .Where(tc => tc.TaskId == task.Id)
                 .ToListAsync();
 
-            Domain.Entities.Task task = await _db.Tasks
-                .FirstOrDefaultAsync(t => t.Id == dto.MoodleAssignmentId);
+            //wtf is moodleassignmentid meant to be?
 
+            // Domain.Entities.Task task = await _db.Tasks
+            //     .FirstOrDefaultAsync(t => t.Id == dto.MoodleAssignmentId);
+
+            // if (task == null)
+            // {
+            //   throw new InvalidOperationException($"Task with ID {dto.MoodleAssignmentId} not found.");
+            // }
             List<Judge0SubmissionDTO> judge0Submissions = new List<Judge0SubmissionDTO>();
             List<TestResult> testResults = new List<TestResult>();
 
@@ -122,12 +129,13 @@ namespace CodeEvaluator.Application.Services
         }
         public async Task<ISubmissionService.Status> DeleteSubmissionAsync(int id)
         {
+            Console.WriteLine("looking for id: "+id);
             var submission = await _db.Submissions.FindAsync(id);
             if (submission == null)
             {
                 return ISubmissionService.Status.NotFound;
             }
-
+            Console.WriteLine("submission found");
             _db.Submissions.Remove(submission);
             await _db.SaveChangesAsync();
             return ISubmissionService.Status.Success;
