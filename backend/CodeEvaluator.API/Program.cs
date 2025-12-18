@@ -4,6 +4,8 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
+using CodeEvaluator.Application.Interfaces.Services;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,11 +29,26 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
     options.IncludeXmlComments(xmlPath);
+   
 });
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+builder.Services.AddSingleton(new CodeEvaluator.Judge0.Client.Judge0Client());
+builder.Services.AddScoped<CodeEvaluator.Application.Interfaces.Services.IJudge0Service, CodeEvaluator.Application.Services.Judge0Service>();
+
+builder.Services.AddHostedService<CodeEvaluator.Application.Services.Judge0PollingService>();
+
+builder.Services.AddScoped<ISubmissionService, CodeEvaluator.Application.Services.SubmissionService>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+
+    });
 
 var app = builder.Build();
 

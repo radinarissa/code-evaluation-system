@@ -13,12 +13,12 @@ namespace CodeEvaluator.Application.DTOs
         /// <summary>
         /// Internal or external student identifier in the evaluation system.
         /// </summary>
-        public string StudentId { get; set; } = default!;
+        public int StudentId { get; set; } = default!;
 
         /// <summary>
         /// Programming language of the submitted solution (e.g. C#).
         /// </summary>
-        public int Language { get; set; } = 71;
+        public int Language { get; set; } = 51;
 
         /// <summary>
         /// Source code submitted by the student.
@@ -47,14 +47,6 @@ namespace CodeEvaluator.Application.DTOs
         /// </summary>
         public int? MoodleAttemptId { get; set; }
 
-        // === Judge0 specific fields ===
-
-        public int? CpuTimeLimit { get; set; }
-        public int? MemoryLimit { get; set; }
-        public int? StackLimit { get; set; }
-        public string? StdIn { get; set; }
-        public string? ExpectedOutput { get; set; }
-        
-
+    
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CodeEvaluator.Domain.Entities;
 
 namespace CodeEvaluator.Infrastructure.Data;
@@ -81,9 +81,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(255).IsRequired();
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.MaxPoints).HasPrecision(5, 2).HasDefaultValue(10.00m);
-            entity.Property(e => e.TimeLimitMs).HasDefaultValue(5000);
-            entity.Property(e => e.MemoryLimitMb).HasDefaultValue(256);
-            entity.Property(e => e.DiskLimitMb).HasDefaultValue(256);
+            entity.Property(e => e.TimeLimitS).HasDefaultValue(3m);
+            entity.Property(e => e.MemoryLimitKb).HasDefaultValue(262144);
+            entity.Property(e => e.DiskLimitKb).HasDefaultValue(256);
+            entity.Property(e => e.DiskLimitKb).HasDefaultValue(256);
             entity.Property(e => e.CreationDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");

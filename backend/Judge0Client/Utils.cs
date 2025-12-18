@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json;
-
+using System.IO.Compression;
+namespace CodeEvaluator.Judge0.Client
+{
 public static class Utils
 {
     public static string ToBase64(string input)
@@ -115,4 +117,18 @@ public static class Utils
 
         return sb.ToString();
     }
+     public static string CreateBase64Zip(string filename, string content)
+    {
+        using var memStream = new MemoryStream();
+        using (var archive = new ZipArchive(memStream, ZipArchiveMode.Create, true))
+        {
+            var zipEntry = archive.CreateEntry(filename, CompressionLevel.Fastest);
+            using var entryStream = zipEntry.Open();
+            using var streamWriter = new StreamWriter(entryStream);
+            streamWriter.Write(content);
+        }
+        var zipBytes = memStream.ToArray();
+        return Convert.ToBase64String(zipBytes);
+    }
+}
 }

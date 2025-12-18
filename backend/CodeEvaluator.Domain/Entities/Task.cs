@@ -7,9 +7,10 @@ public class Task
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public decimal MaxPoints { get; set; }
-    public int TimeLimitMs { get; set; }
-    public int MemoryLimitMb { get; set; }
-    public int DiskLimitMb { get; set; }
+    public decimal? TimeLimitS { get; set; }
+    public int? MemoryLimitKb { get; set; }
+    public int? DiskLimitKb { get; set; }
+    public int? StackLimitKb { get; set; }
     public int CreatedBy { get; set; }
     public DateTime CreationDate { get; set; }
     public DateTime? DueDate { get; set; }
