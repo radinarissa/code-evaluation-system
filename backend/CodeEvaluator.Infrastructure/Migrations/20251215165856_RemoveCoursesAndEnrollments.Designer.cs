@@ -3,6 +3,7 @@ using System;
 using CodeEvaluator.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,13 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeEvaluator.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251215165856_RemoveCoursesAndEnrollments")]
+    partial class RemoveCoursesAndEnrollments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -199,7 +202,7 @@ namespace CodeEvaluator.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("DiskLimitKb")
+                    b.Property<int>("DiskLimitMb")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(256);
@@ -218,10 +221,10 @@ namespace CodeEvaluator.Infrastructure.Migrations
                         .HasColumnType("numeric(5,2)")
                         .HasDefaultValue(10.00m);
 
-                    b.Property<int?>("MemoryLimitKb")
+                    b.Property<int>("MemoryLimitMb")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(262144);
+                        .HasDefaultValue(256);
 
                     b.Property<int?>("MoodleAssignmentId")
                         .HasColumnType("integer");
@@ -229,17 +232,13 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     b.Property<string>("MoodleAssignmentName")
                         .HasColumnType("text");
 
-                    b.Property<int?>("StackLimitKb")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("TimeLimitS")
                     b.Property<int>("MoodleCourseId")
                         .HasColumnType("integer");
 
-                   
+                    b.Property<int>("TimeLimitMs")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric")
-                        .HasDefaultValue(3m);
+                        .HasColumnType("integer")
+                        .HasDefaultValue(5000);
 
                     b.Property<string>("Title")
                         .IsRequired()

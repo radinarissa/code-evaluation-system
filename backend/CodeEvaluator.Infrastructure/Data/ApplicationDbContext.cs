@@ -10,9 +10,7 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    public DbSet<Course> Courses { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
     public DbSet<Domain.Entities.Task> Tasks { get; set; }
     public DbSet<TestCase> TestCases { get; set; }
     public DbSet<ReferenceSolution> ReferenceSolutions { get; set; }
@@ -24,19 +22,7 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Course>(entity =>
-        {
-            entity.ToTable("Courses");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("Id");
-            entity.Property(e => e.MoodleCourseId).IsRequired();
-            entity.HasIndex(e => e.MoodleCourseId).IsUnique();
-            entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.AcademicYear).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.Semester).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-        });
+        
 
         modelBuilder.Entity<User>(entity =>
         {
@@ -54,26 +40,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 
-        modelBuilder.Entity<CourseEnrollment>(entity =>
-        {
-            entity.ToTable("CourseEnrollments");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Role).HasMaxLength(50).IsRequired();
-            entity.Property(e => e.EnrolledAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-            entity.HasOne(e => e.Course)
-                .WithMany(c => c.Enrollments)
-                .HasForeignKey(e => e.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.User)
-                .WithMany(u => u.Enrollments)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => new { e.CourseId, e.UserId }).IsUnique();
-        });
-
         modelBuilder.Entity<Domain.Entities.Task>(entity =>
         {
             entity.ToTable("Tasks");
@@ -89,17 +55,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(e => e.Course)
-                .WithMany(c => c.Tasks)
-                .HasForeignKey(e => e.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             entity.HasOne(e => e.Creator)
                 .WithMany(u => u.CreatedTasks)
                 .HasForeignKey(e => e.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.MoodleAssignmentId).IsUnique();
+            entity.HasIndex(e => e.MoodleCourseId);
         });
 
         modelBuilder.Entity<TestCase>(entity =>

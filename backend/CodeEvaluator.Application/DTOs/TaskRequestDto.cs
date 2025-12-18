@@ -48,6 +48,20 @@ namespace CodeEvaluator.Application.DTOs
         /// <summary>
         /// Optional Moodle assignment identifier for integration.
         /// </summary>
-        public string? MoodleAssignmentId { get; set; }
+        public int? MoodleAssignmentId { get; set; }
+
+        public int CreatedByUserid { get; set; }
+
+        public DateTime DueDate { get; set; }
+
+        public DateTime UpdatedAt { get; set; }
+
+        public bool IsActive { get; set; }
+
+        public int MemoryLimitMb { get; set; }
+
+        public int CourseId { get; set; }
+
+        public string Title { get; set; }
     }
 }

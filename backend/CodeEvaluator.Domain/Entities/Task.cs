@@ -3,7 +3,7 @@
 public class Task
 {
     public int Id { get; set; }
-    public int CourseId { get; set; }
+    public int MoodleCourseId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public decimal MaxPoints { get; set; }
@@ -19,7 +19,6 @@ public class Task
     public bool IsActive { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public Course Course { get; set; } = null!;
     public User Creator { get; set; } = null!;
     public ICollection<TestCase> TestCases { get; set; } = new List<TestCase>();
     public ICollection<ReferenceSolution> ReferenceSolutions { get; set; } = new List<ReferenceSolution>();

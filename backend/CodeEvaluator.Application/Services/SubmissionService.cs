@@ -26,7 +26,8 @@ namespace CodeEvaluator.Application.Services
             {   
              Task = task,                     
              Code = dto.SourceCode,
-             UserId = dto.StudentId,
+             UserId = dto.MoodleUserId,
+             MoodleSubmissionId = dto.MoodleSubmissionId,
              AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault(1),
              SubmissionTime = DateTime.UtcNow,
              Status = "Pending",

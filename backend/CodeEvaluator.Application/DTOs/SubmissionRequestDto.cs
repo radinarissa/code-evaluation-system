@@ -38,9 +38,9 @@ namespace CodeEvaluator.Application.DTOs
         public string MoodleCourseId { get; set; } = default!;
 
         /// <summary>
-        /// Assignment identifier in Moodle.
+        /// Submission identifier in Moodle.
         /// </summary>
-        public int MoodleAssignmentId { get; set; } = default!;
+        public int MoodleSubmissionId { get; set; } = default!;
 
         /// <summary>
         /// Optional attempt number in Moodle.

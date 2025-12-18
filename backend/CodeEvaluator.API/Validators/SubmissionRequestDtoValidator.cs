@@ -27,8 +27,8 @@ namespace CodeEvaluator.API.Validators
             RuleFor(x => x.MoodleCourseId)
                 .NotEmpty().WithMessage("MoodleCourseId is required.");
 
-            RuleFor(x => x.MoodleAssignmentId)
-                .NotEmpty().WithMessage("MoodleAssignmentId is required.");
+            RuleFor(x => x.MoodleSubmissionId)
+                .NotEmpty().WithMessage("MoodleSubmissionId is required.");
         }
     }
 }
