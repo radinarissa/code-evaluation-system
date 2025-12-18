@@ -10,8 +10,7 @@ namespace CodeEvaluator.Application.Services
 
         private const string MoodleUrl = "http://localhost:8000";
 
-        // Use "moodle_mobile_app" service which is enabled by default on most Moodle instances
-        private const string ServiceName = "moodle_mobile_app";
+        private const string ServiceName = "dotnetauth";
 
         public MoodleAuthService(HttpClient http)
         {
