@@ -20,46 +20,81 @@ namespace CodeEvaluator.Application.Services
 
         public async Task<Submission> CreateSubmissionAndRunJudge0Async(SubmissionRequestDto dto)
         {
-            var submission = new Submission
-            {
-                TaskId = dto.TaskId,
-                MoodleSubmissionId = dto.MoodleSubmissionId,
-                Code = dto.SourceCode,
-                UserId = dto.MoodleUserId,
-                AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault()
+            var task = await _db.Tasks.FindAsync(dto.TaskId);
+            if (task == null) throw new Exception("Task not found");
+           var submission = new Submission
+            {   
+             Task = task,                     
+             Code = dto.SourceCode,
+             UserId = dto.MoodleUserId,
+             MoodleSubmissionId = dto.MoodleSubmissionId,
+             AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault(1),
+             SubmissionTime = DateTime.UtcNow,
+             Status = "Pending",
             };
 
             _db.Submissions.Add(submission);
             await _db.SaveChangesAsync();
 
+            List<TestCase> testCases = await _db.TestCases
+                .Where(tc => tc.TaskId == task.Id)
+                .ToListAsync();
+
+            //wtf is moodleassignmentid meant to be?
+
+            // Domain.Entities.Task task = await _db.Tasks
+            //     .FirstOrDefaultAsync(t => t.Id == dto.MoodleAssignmentId);
+
+            // if (task == null)
+            // {
+            //   throw new InvalidOperationException($"Task with ID {dto.MoodleAssignmentId} not found.");
+            // }
+            List<Judge0SubmissionDTO> judge0Submissions = new List<Judge0SubmissionDTO>();
+            List<TestResult> testResults = new List<TestResult>();
+
+            foreach (var testCase in testCases)
+            {
             Judge0SubmissionDTO judge0sub = new Judge0SubmissionDTO
             {
-
                 SourceCode = dto.SourceCode,
                 LanguageId = dto.Language,
-                CpuTimeLimit = dto.CpuTimeLimit,
-                MemoryLimit = dto.MemoryLimit,
-                StackLimit = dto.StackLimit,
-                StdIn = dto.StdIn,
-                ExpectedOutput = dto.ExpectedOutput
+                CpuTimeLimit = task.TimeLimitS,
+                MemoryLimit = task.MemoryLimitKb,
+                StackLimit = task.StackLimitKb,
+                MaxFileSize = task.DiskLimitKb,
+                StdIn = testCase.Input,
+                ExpectedOutput = testCase.ExpectedOutput
             };
+            judge0Submissions.Add(judge0sub);
 
-            var judgeResult = await _judge0Service.ExecuteCodeAsync(judge0sub);
-
-            var result = new TestResult
+            TestResult testResult = new TestResult
             {
-                SubmissionId = submission.Id,
-                Output = judgeResult.Stdout,
-                ErrorMessage = judgeResult.Stderr,
-                Status = judgeResult.Status.Description,
-                ExecutionTime = judgeResult.Time,
-                MemoryUsage = judgeResult.Memory
+                Submission = submission,
+                TestCase = testCase,
+                Status = "Pending"
             };
+            testResults.Add(testResult);
+            }
 
-            _db.TestResults.Add(result);
+            _db.TestResults.AddRange(testResults);
+
+          
+            List<string> judgeResult = await _judge0Service.ExecuteBatchCodeAsync(judge0Submissions);
+   //          var submissionsinfo = await _judge0Service.GetSubbmisionBatchAsync(judgeResult); //For some reason returns 0?
+           
+           //should work if order is preserved
+           if (judgeResult.Count != testResults.Count)
+            {
+              throw new InvalidOperationException("Judge0 token count does not match test result count");
+            }
+            for (int i = 0; i < testResults.Count;i++)
+            {
+                 testResults[i].Judge0Token = judgeResult[i];
+            }
+
+           
+           
             await _db.SaveChangesAsync();
-
-            submission.TestResults.Add(result);
             return submission;
         }
 
@@ -95,12 +130,13 @@ namespace CodeEvaluator.Application.Services
         }
         public async Task<ISubmissionService.Status> DeleteSubmissionAsync(int id)
         {
+            Console.WriteLine("looking for id: "+id);
             var submission = await _db.Submissions.FindAsync(id);
             if (submission == null)
             {
                 return ISubmissionService.Status.NotFound;
             }
-
+            Console.WriteLine("submission found");
             _db.Submissions.Remove(submission);
             await _db.SaveChangesAsync();
             return ISubmissionService.Status.Success;
