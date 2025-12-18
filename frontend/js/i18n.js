@@ -13,11 +13,13 @@ const I18n = {
 
             // Login
             login: 'Вход',
+            loggingIn: 'Влизане...',
             username: 'Потребителско име',
             password: 'Парола',
             enterUsername: 'Въведете потребителско име',
             enterPassword: 'Въведете парола',
             invalidCredentials: 'Невалидно потребителско име или парола',
+            connectionError: 'Грешка при свързване. Моля, опитайте отново.',
             logout: 'Изход',
 
             // Navigation
@@ -88,7 +90,32 @@ const I18n = {
             // Course
             course: 'Курс',
             academicYear: 'Учебна година',
-            semester: 'Семестър'
+            semester: 'Семестър',
+
+            // Statistics
+            statistics: 'Статистика',
+            statisticsFor: 'Статистика за',
+            generalInfo: 'Обща информация',
+            uniqueStudents: 'Уникални студенти',
+            avgAttempts: 'Ср. опити/студент',
+            avgTimeBetween: 'Ср. време между опити',
+            firstSubmission: 'Първо предаване',
+            lastSubmission: 'Последно предаване',
+            gradeDistribution: 'Разпределение на оценките',
+            histogram: 'Хистограма по диапазони',
+            medianGrade: 'Медиана',
+            minGrade: 'Мин. оценка',
+            maxGrade: 'Макс. оценка',
+            perfectScore: '% с отличен (6)',
+            failingScore: '% със слаб (2)',
+            hours: 'ч',
+            minutes: 'мин',
+            poor: 'Слаб (2)',
+            excellent: 'Отличен (6)',
+            recentSubmissionsPreview: 'Последни предавания',
+            attemptNumber: 'Опит №',
+            loadingStatisticsFor: 'Зареждане на статистика за',
+            mockDataNote: 'Това са примерни данни'
         },
         en: {
             // App
@@ -97,11 +124,13 @@ const I18n = {
 
             // Login
             login: 'Login',
+            loggingIn: 'Logging in...',
             username: 'Username',
             password: 'Password',
             enterUsername: 'Enter username',
             enterPassword: 'Enter password',
             invalidCredentials: 'Invalid username or password',
+            connectionError: 'Connection error. Please try again.',
             logout: 'Logout',
 
             // Navigation
@@ -172,7 +201,32 @@ const I18n = {
             // Course
             course: 'Course',
             academicYear: 'Academic Year',
-            semester: 'Semester'
+            semester: 'Semester',
+
+            // Statistics
+            statistics: 'Statistics',
+            statisticsFor: 'Statistics for',
+            generalInfo: 'General Information',
+            uniqueStudents: 'Unique Students',
+            avgAttempts: 'Avg Attempts/Student',
+            avgTimeBetween: 'Avg Time Between Attempts',
+            firstSubmission: 'First Submission',
+            lastSubmission: 'Last Submission',
+            gradeDistribution: 'Grade Distribution',
+            histogram: 'Histogram by Range',
+            medianGrade: 'Median Grade',
+            minGrade: 'Min Grade',
+            maxGrade: 'Max Grade',
+            perfectScore: '% Excellent (6)',
+            failingScore: '% Failing (2)',
+            hours: 'h',
+            minutes: 'min',
+            poor: 'Failing (2)',
+            excellent: 'Excellent (6)',
+            recentSubmissionsPreview: 'Recent Submissions',
+            attemptNumber: 'Attempt #',
+            loadingStatisticsFor: 'Loading statistics for',
+            mockDataNote: 'This is mock data'
         }
     },
 

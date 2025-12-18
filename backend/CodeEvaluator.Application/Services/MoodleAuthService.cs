@@ -8,10 +8,10 @@ namespace CodeEvaluator.Application.Services
     {
         private readonly HttpClient _http;
 
-        private const string MoodleUrl =
-            "https://fpmi.bg/moodle";
+        private const string MoodleUrl = "http://localhost:8000";
 
-        private const string ServiceName = "DotNetAuth";
+        // Use "moodle_mobile_app" service which is enabled by default on most Moodle instances
+        private const string ServiceName = "moodle_mobile_app";
 
         public MoodleAuthService(HttpClient http)
         {
