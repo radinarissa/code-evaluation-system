@@ -232,11 +232,11 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     b.Property<int?>("StackLimitKb")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("TimeLimitS")
+                    
                     b.Property<int>("MoodleCourseId")
                         .HasColumnType("integer");
-
-                   
+                        
+                        b.Property<decimal?>("TimeLimitS")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("numeric")
                         .HasDefaultValue(3m);
