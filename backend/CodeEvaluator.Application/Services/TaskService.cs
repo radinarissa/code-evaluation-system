@@ -22,14 +22,14 @@ namespace CodeEvaluator.Application.Services
                 Description = dto.Description,
                 CreationDate = DateTime.UtcNow,
                 MaxPoints = dto.MaxPoints,
-                TimeLimitMs = dto.MaxExecutionTimeMs,
-                DiskLimitMb = dto.MaxDiskUsageMb,
+                TimeLimitS = dto.MaxExecutionTimeMs,
+                DiskLimitKb = dto.MaxDiskUsageMb,
                 CreatedBy = dto.CreatedByUserid,
                 DueDate = dto.DueDate,
                 IsActive = dto.IsActive,
                 UpdatedAt = dto.UpdatedAt,
                 Title = dto.Title,
-                MemoryLimitMb = dto.MemoryLimitMb,
+                MemoryLimitKb = dto.MemoryLimitMb,
                 MoodleCourseId = dto.CourseId,
                 TestCases = dto.TestCases.Select(x => new Domain.Entities.TestCase
                 {
