@@ -9,6 +9,9 @@ using Newtonsoft.Json.Linq;
 using CodeEvaluator.Domain.Entities;
 using CodeEvaluator.Application.DTOs;
 using System.Net.Http;
+using CodeEvaluator.Judge0.Client;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CodeEvaluator.Application.Services
 {
@@ -54,7 +57,7 @@ namespace CodeEvaluator.Application.Services
 
                         await db.Entry(testResult).Reference(tr => tr.TestCase).LoadAsync();
 
-                        testResult.Status = DetermineTestStatus(res, testResult.TestCase.ExpectedOutput);
+                        testResult.Status = DetermineTestStatus(res);
 
                         if (res.Time != null)
                         {
@@ -69,7 +72,11 @@ namespace CodeEvaluator.Application.Services
                         Console.WriteLine("updated test result for token: " + res.Token);
 
                         var allresultsforsubmission = db.TestResults.Where(sb => sb.SubmissionId == testResult.Submission.Id);
-                        bool alldone = allresultsforsubmission.All(ares => ares.Status != "Pending");
+                       // bool alldone = allresultsforsubmission.All(ares => ares.Status != "Pending");
+
+                       bool alldone = pendingResults
+                            .Where(tr => tr.SubmissionId == testResult.Submission.Id)
+                            .All(tr => tr.Status != "Pending");
 
                         if (alldone)
                         {
@@ -81,13 +88,14 @@ namespace CodeEvaluator.Application.Services
                                 .ToListAsync(stoppingToken);
 
                             int totalTests = allTestResults.Count;
-                            int passedTests = allTestResults.Count(tr => tr.Status == "Pass");
+                            int passedTests = allTestResults.Count(tr => tr.Status == "Accepted");
                             decimal maxPoints = testResult.Submission.Task.MaxPoints;
                             decimal finalGrade = totalTests > 0 ? (decimal)passedTests / totalTests * maxPoints : 0;
 
                             string feedback = GenerateFeedback(allTestResults, passedTests, totalTests);
 
                             testResult.Submission.Status = "Completed";
+                            testResult.Submission.EvaluationCompletedAt= DateTime.UtcNow;
                             testResult.Submission.FinalGrade = finalGrade;
                             testResult.Submission.Feedback = feedback;
 
@@ -107,42 +115,26 @@ namespace CodeEvaluator.Application.Services
             }
         }
 
-        private string DetermineTestStatus(Judge0ResultDto judge0Result, string expectedOutput)
+        private string DetermineTestStatus(Judge0ResultDto judge0Result)
         {
-            if (judge0Result.Status.Id == 6)
+            switch (judge0Result.Status.Id)
             {
-                return "Compilation Error";
-            }
-            else if (judge0Result.Status.Id == 5 || judge0Result.Status.Id == 11 || judge0Result.Status.Id == 12)
-            {
-                return "Runtime Error";
-            }
-            else if (judge0Result.Status.Id == 4)
-            {
-                return "Timeout";
-            }
-            else if (judge0Result.Status.Id == 7)
-            {
-                return "Memory Limit";
-            }
-            else if (judge0Result.Status.Id == 3)
-            {
-                string actualOutput = judge0Result.Stdout?.Trim() ?? "";
-                string expected = expectedOutput?.Trim() ?? "";
+                case 1: return "In Queue"; 
+                case 2: return "Processing";
+                case 3: return "Accepted";
+                case 4: return "Wrong Answer";
+                case 5: return "Time Limit Exceeded";
+                case 6: return "Compilation Error";
+                case 7: return "Runtime error - segfault, invalid memory access";
+                case 8: return "Runtime error - Output exceeded size limit";
+                case 9: return "Runtime error - Floating-point error (divide by zero, overflow)";
+                case 11: return "Runtime error - non zero exit code";
+                case 12: return "Runtime error";
+                case 13: return "Judge0 Internal Failure";
+                case 14: return "Binary format invalid/wrong architecture";
 
-                if (actualOutput == expected)
-                {
-                    return "Pass";
-                }
-                else
-                {
-                    return "Fail";
-                }
             }
-            else
-            {
-                return "Unknown";
-            }
+           return "Unknown";
         }
 
         private string GenerateFeedback(List<TestResult> testResults, int passedTests, int totalTests)
@@ -161,11 +153,11 @@ namespace CodeEvaluator.Application.Services
                 string message = testResult.Status switch
                 {
                     "Compilation Error" => $"Компилационна грешка: {testResult.ErrorMessage}",
-                    "Timeout" => $"Програмата не преминава тестът \"{testName}\" за достатъчно кратко време.",
-                    "Memory Limit" => $"Програмата не преминава тестът \"{testName}\" поради изчерпване на паметта. Използвана памет: {testResult.MemoryUsage} KB.",
-                    "Disk Limit" => $"Програмата не преминава тестът \"{testName}\" поради изчерпване на позволеното дисково пространство. Използвано: {testResult.DiskUsedMb} MB.",
+                    "Time Limit Exceeded" => $"Програмата не преминава тестът \"{testName}\" за достатъчно кратко време.",
+                    "Runtime error - segfault, invalid memory access" => $"Програмата не преминава тестът \"{testName}\" поради изчерпване на паметта. Използвана памет: {testResult.MemoryUsage} KB.",
+                    "Runtime error - Output exceeded size limit" => $"Програмата не преминава тестът \"{testName}\" поради изчерпване на позволеното дисково пространство. Използвано: {testResult.DiskUsedMb} MB.",
                     "Runtime Error" => $"Runtime грешка в тест \"{testName}\": {testResult.ErrorMessage}",
-                    "Fail" => $"Неуспешно изпълнение на тест \"{testName}\" - резултатът се различава от очакваното.",
+                    "Wrong Answer" => $"Неуспешно изпълнение на тест \"{testName}\" - резултатът се различава от очакваното.",
                     _ => $"Грешка в тест \"{testName}\": {testResult.Status}"
                 };
                 feedbackLines.Add(message);

@@ -21,14 +21,23 @@ namespace CodeEvaluator.Application.Services
         public async Task<Submission> CreateSubmissionAndRunJudge0Async(SubmissionRequestDto dto)
         {
             var task = await _db.Tasks.FindAsync(dto.TaskId);
+
             if (task == null) throw new Exception("Task not found");
+
+            var highestAttempt = _db.Submissions
+                 .Where(a => a.UserId == dto.MoodleUserId && a.TaskId == task.Id)
+                 .Select(a => a.AttemptNumber)
+                 .ToList()
+                 .DefaultIfEmpty(0)   
+                 .Max();
+        highestAttempt++;
            var submission = new Submission
             {   
              Task = task,                     
              Code = dto.SourceCode,
              UserId = dto.MoodleUserId,
              MoodleSubmissionId = dto.MoodleSubmissionId,
-             AttemptNumber = dto.MoodleAttemptId.GetValueOrDefault(1),
+             AttemptNumber = highestAttempt,
              SubmissionTime = DateTime.UtcNow,
              Status = "Pending",
             };
