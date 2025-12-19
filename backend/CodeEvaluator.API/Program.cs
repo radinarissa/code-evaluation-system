@@ -64,6 +64,8 @@ builder.Services.AddControllers()
 
     });
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IJudge0Service, Judge0Service>();
@@ -77,6 +79,7 @@ builder.Services.AddAuthentication(
     {
         options.LoginPath = "/Auth/Login";
     });
+
 
 
 var app = builder.Build();
