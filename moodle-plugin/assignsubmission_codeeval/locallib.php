@@ -6,7 +6,7 @@ require_once($CFG->dirroot . '/mod/assign/submissionplugin.php');
 require_once($CFG->libdir . '/filelib.php');
 
 /**
- * CodeEval submission plugin (mock implementation).
+ * CodeEval submission
  *
  * @package   assignsubmission_codeeval
  */
@@ -20,21 +20,15 @@ class assign_submission_codeeval extends assign_submission_plugin {
     }
 
     /**
- * Add per-assignment settings (shown when editing an assignment).
- */
+    * Add per-assignment settings (shown when editing an assignment).
+    */
     public function get_settings(MoodleQuickForm $mform) {
-        // Field name MUST be prefixed like this:
         $fieldname = 'assignsubmission_codeeval_taskid';
 
-        $mform->addElement(
-            'text',
-            $fieldname,
-            get_string('taskid', 'assignsubmission_codeeval')
-        );
+        $mform->addElement('text', $fieldname, get_string('taskid', 'assignsubmission_codeeval'));
         $mform->setType($fieldname, PARAM_INT);
         $mform->addHelpButton($fieldname, 'taskid', 'assignsubmission_codeeval');
 
-        // Load current value when editing assignment settings.
         $mform->setDefault($fieldname, (int)$this->get_config('taskid'));
     }
 
@@ -59,12 +53,7 @@ class assign_submission_codeeval extends assign_submission_plugin {
      */
     public function get_form_elements($submission, $mform, $data) {
 
-        $mform->addElement(
-            'textarea',
-            'codeeval_source',
-            get_string('sourcecode', 'assignsubmission_codeeval'),
-            'wrap="virtual" rows="20" cols="80"'
-        );
+        $mform->addElement('textarea', 'codeeval_source', get_string('sourcecode', 'assignsubmission_codeeval'), 'wrap="virtual" rows="20" cols="80"');
         $mform->setType('codeeval_source', PARAM_RAW);
 
         // Preload existing source, if any.
@@ -94,14 +83,14 @@ class assign_submission_codeeval extends assign_submission_plugin {
 
     $payload = [
         'taskId' => $taskid,
-        'studentId' => (string)$userid,
-        'language' => 71,
+        'studentId' => (int)$userid,
+        'language' => 51,
         'sourceCode' => $code,
         'moodleUserId' => (int)$userid,
         'moodleCourseId' => (string)$this->assignment->get_course()->id,
         'moodleSubmissionId' => (int)$submission->id,
     ];
-
+    error_log("CODEEVAL payload=" . json_encode($payload));
     list($httpcode, $response) = $this->backend_post_json('/api/submissions', $payload);
     error_log("CODEEVAL backend POST /api/submissions HTTP=$httpcode response=$response");
 
@@ -109,7 +98,6 @@ class assign_submission_codeeval extends assign_submission_plugin {
         throw new moodle_exception('backendgradingfailed', 'assignsubmission_codeeval', '', null,
             "Backend returned HTTP $httpcode: $response");
     }
-
 
     $gradevalue = null;
     $feedback = '';
@@ -134,9 +122,16 @@ class assign_submission_codeeval extends assign_submission_plugin {
         $feedback = (string)$json['message'];
     }
 
+    // if ($gradevalue === null) {
+    //     throw new moodle_exception('backendgradingfailed', 'assignsubmission_codeeval', '', null,
+    //         "Backend JSON missing grade field. Response: $response");
+    // }
+
     if ($gradevalue === null) {
-        throw new moodle_exception('backendgradingfailed', 'assignsubmission_codeeval', '', null,
-            "Backend JSON missing grade field. Response: $response");
+    // Backend accepted submission but grading is async/pending.
+    // Save source code locally and return success.
+    $gradevalue = null;
+    $feedback = 'Submission received. Grading pending.';
     }
 
     $record = $this->get_record($submission->id);
@@ -149,28 +144,30 @@ class assign_submission_codeeval extends assign_submission_plugin {
         $DB->update_record('assignsubmission_codeeval', $record);
     } else {
         $record = (object)[
-            'assignment'   => $this->assignment->get_instance()->id,
-            'submission'   => $submission->id,
-            'userid'       => $submission->userid ?? $USER->id,
-            'sourcecode'   => $code,
-            'grade'        => $gradevalue,
-            'timecreated'  => time(),
+            'assignment' => $this->assignment->get_instance()->id,
+            'submission' => $submission->id,
+            'userid' => $submission->userid ?? $USER->id,
+            'sourcecode' => $code,
+            'grade' => $gradevalue,
+            'timecreated' => time(),
             'timemodified' => time(),
         ];
         $record->id = $DB->insert_record('assignsubmission_codeeval', $record);
     }
 
-    // 3) Update the core assign grade (+ gradebook) correctly.
+    //Update the core assign grade (+ gradebook)
     $userid = $submission->userid ?? $USER->id;
 
-    // This returns a row from mdl_assign_grades, creating it if needed.
     $grade = $this->assignment->get_user_grade($userid, true);
 
-    $grade->grade        = $gradevalue;   // Column 'grade' in mdl_assign_grades.
+    if ($gradevalue !== null) {
+    $grade = $this->assignment->get_user_grade($userid, true);
+    $grade->grade = $gradevalue;
     $grade->timemodified = time();
-    $grade->grader       = $USER->id;
+    $grade->grader = $USER->id;
+    $this->assignment->update_grade($grade, false);
+    }
 
-    // Now $grade has an id, so this will not throw the codingerror.
     $this->assignment->update_grade($grade, false);
 
     return true;
@@ -183,17 +180,14 @@ class assign_submission_codeeval extends assign_submission_plugin {
      * the assignment shows "Nothing was submitted".
      */
     public function is_empty(stdClass $submission) {
-        // If we don't even have a submission id, treat it as empty.
         if (empty($submission->id)) {
             return true;
         }
 
         if ($record = $this->get_record($submission->id)) {
-            // Empty if there is no source code or just whitespace.
             return trim($record->sourcecode) === '';
         }
 
-        // No record in our table => empty.
         return true;
     }
 
@@ -226,16 +220,16 @@ class assign_submission_codeeval extends assign_submission_plugin {
      * - else if contains 'if' -> 80
      * - else -> 60
      */
-    protected function mock_grade_from_code($code): float {
-        $lower = core_text::strtolower($code);
-        if (strpos($lower, 'for') !== false) {
-            return 100.0;
-        }
-        if (strpos($lower, 'if') !== false) {
-            return 80.0;
-        }
-        return 60.0;
-    }
+    // protected function mock_grade_from_code($code): float {
+    //     $lower = core_text::strtolower($code);
+    //     if (strpos($lower, 'for') !== false) {
+    //         return 100.0;
+    //     }
+    //     if (strpos($lower, 'if') !== false) {
+    //         return 80.0;
+    //     }
+    //     return 60.0;
+    // }
 
     protected function backend_post_json(string $path, array $payload): array {
     $base = get_config('assignsubmission_codeeval', 'backend_url');
@@ -248,7 +242,8 @@ class assign_submission_codeeval extends assign_submission_plugin {
     $curl = new curl();
     $options = [
         'CURLOPT_HTTPHEADER' => ['Content-Type: application/json'],
-        'CURLOPT_TIMEOUT' => 20,
+        'CURLOPT_CONNECTTIMEOUT' => 10,
+        'CURLOPT_TIMEOUT' => 120,
     ];
 
     $body = $curl->post($url, json_encode($payload), $options);
