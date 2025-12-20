@@ -74,15 +74,47 @@ const App = {
     },
 
     /**
-     * Setup logout handler
+     * Setup logout handler with confirmation
      */
+    logoutConfirmed: false,
+    logoutTimeout: null,
+
     setupLogout() {
         const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
+        const logoutLabel = document.getElementById('logout-label');
+
+        const doLogout = () => {
+            this.logoutConfirmed = false;
+            clearTimeout(this.logoutTimeout);
+            logoutLabel.classList.add('hidden');
+            Auth.logout();
+            this.showLogin();
+        };
+
+        if (logoutBtn && logoutLabel) {
+            // Icon click - show label
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                Auth.logout();
-                this.showLogin();
+
+                if (!this.logoutConfirmed) {
+                    this.logoutConfirmed = true;
+                    logoutLabel.textContent = I18n.t('logout');
+                    logoutLabel.classList.remove('hidden');
+
+                    // Reset after 3 seconds if not clicked
+                    this.logoutTimeout = setTimeout(() => {
+                        this.logoutConfirmed = false;
+                        logoutLabel.classList.add('hidden');
+                    }, 3000);
+                }
+            });
+
+            // Label click - actually log out
+            logoutLabel.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.logoutConfirmed) {
+                    doLogout();
+                }
             });
         }
     },
@@ -148,8 +180,8 @@ const App = {
                 case 'submissions':
                     html = await SubmissionsView.render();
                     break;
-                case 'tasks':
-                    html = await TasksView.render();
+                case 'statistics':
+                    html = await StatisticsView.render();
                     break;
                 case 'students':
                     html = await StudentsView.render();

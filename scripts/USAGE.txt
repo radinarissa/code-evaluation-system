@@ -1,0 +1,12 @@
+Usage examples:
+
+  # macOS/Linux
+  ./scripts/create-moodle-user.sh jsmith
+
+  # Windows PowerShell
+  .\scripts\create-moodle-user.ps1 -Username jsmith
+
+  # Windows CMD
+  scripts\create-moodle-user.bat jsmith
+
+Default password is Admin1234@ (meets Moodle's password policy). Custom passwords can be passed as second argument.

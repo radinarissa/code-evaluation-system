@@ -56,7 +56,7 @@ const TasksView = {
                 <div class="text-xs text-gray-500 mb-3 space-y-1">
                     <div class="flex justify-between">
                         <span>${I18n.t('timeLimit')}:</span>
-                        <span>${Utils.formatMs(t.timeLimitMs)}</span>
+                        <span>${Utils.formatMs(t.timeLimitS)}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>${I18n.t('memoryLimit')}:</span>

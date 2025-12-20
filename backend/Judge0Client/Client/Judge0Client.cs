@@ -8,7 +8,7 @@ namespace CodeEvaluator.Judge0.Client
 public class Judge0Client
 {
     // Reuse a single static HttpClient instance.
-    public static string BaseUrl {get; set;}
+    //public static string BaseUrl {get; set;}
 
     public Judge0Client()
     {
@@ -19,21 +19,21 @@ public class Judge0Client
         Timeout = TimeSpan.FromSeconds(30)
     };
 
-      public static void SetBaseUrl(string baseUrl)
-    {
-        if(string.IsNullOrWhiteSpace(baseUrl))
-        {
-            throw new ArgumentException("BaseUrl cannot be null or empty", nameof(baseUrl));
-        }
+    // public static void SetBaseUrl(string baseUrl)
+    // {
+    //     if(string.IsNullOrWhiteSpace(baseUrl))
+    //     {
+    //         throw new ArgumentException("BaseUrl cannot be null or empty", nameof(baseUrl));
+    //     }
 
-        if (!baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-            !baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException("BaseUrl must include http:// or https:// scheme", nameof(baseUrl));
-        }
+    //     if (!baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+    //         !baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+    //     {
+    //         throw new ArgumentException("BaseUrl must include http:// or https:// scheme", nameof(baseUrl));
+    //     }
 
-        BaseUrl = baseUrl.TrimEnd('/');
-    }
+    //     BaseUrl = baseUrl.TrimEnd('/');
+    // }
 
 
 
@@ -61,12 +61,16 @@ public class Judge0Client
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"Judge0 returned {(int)response.StatusCode} {response.ReasonPhrase}: {body}");
 
+        Console.WriteLine("POSTING TO JUDGE0 URL: " + url);
         return body;
     }
 
     public async Task<string> SendSubmissionBatchAsync(string submissionsJson, CancellationToken ct = default)
     {
-        var url = BuildUrl("submissions/batch", "base64_encoded=true", "fields=*");
+        var url = BuildUrl("submissions/batch","wait=false", "base64_encoded=true", "fields=*");
+
+        Console.WriteLine($"[Judge0Client] POSTing to: {url}");
+
         using var content = new StringContent(submissionsJson ?? throw new ArgumentNullException(nameof(submissionsJson)), Encoding.UTF8, "application/json");
 
         using var response = await httpClient.PostAsync(url, content, ct).ConfigureAwait(false);
@@ -82,7 +86,7 @@ public class Judge0Client
     {
         if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(token));
         var encoded = Uri.EscapeDataString(token);
-        var url = BuildUrl($"submissions/{encoded}", "base64_encoded=false", "fields=*");
+        var url = BuildUrl($"submissions/{encoded}", "base64_encoded=true", "fields=*");
 
         using var response = await httpClient.GetAsync(url, ct).ConfigureAwait(false);
         var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
@@ -99,7 +103,7 @@ public class Judge0Client
         // tokensCsv should be comma-separated tokens; we URL encode the full value.
         if (tokensCsv == null) throw new ArgumentNullException(nameof(tokensCsv));
         var encoded = Uri.EscapeDataString(tokensCsv);
-        var url = BuildUrl("submissions/batch", $"tokens={encoded}", "base64_encoded=false", "fields=*");
+        var url = BuildUrl("submissions/batch", $"tokens={encoded}", "base64_encoded=true", "fields=*");
 
         using var response = await httpClient.GetAsync(url, ct).ConfigureAwait(false);
         var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);

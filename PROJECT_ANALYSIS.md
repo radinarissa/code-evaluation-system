@@ -235,7 +235,7 @@ Additional Tables:
 
 **Integration Points:**
 - `TestResult.Judge0Token` - Stores Judge0 submission token for result retrieval
-- Task constraints (`TimeLimitMs`, `MemoryLimitMb`, `DiskLimitMb`) passed to Judge0
+- Task constraints (`TimeLimitS`, `MemoryLimitMb`, `DiskLimitMb`) passed to Judge0
 
 **Setup:** Detailed in `README.md` - requires Docker, Ubuntu VM, specific network configuration.
 

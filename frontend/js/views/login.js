@@ -1,13 +1,8 @@
 /**
  * Login View
- * Handles user authentication with hardcoded credentials
+ * Handles user authentication via backend API
  */
 const LoginView = {
-    // Hardcoded credentials
-    VALID_CREDENTIALS: {
-        username: 'ggeorgiev',
-        password: 'password123'
-    },
 
     /**
      * Render the login form
@@ -146,28 +141,55 @@ const LoginView = {
     /**
      * Handle login form submission
      */
-    handleLogin() {
+    async handleLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('login-error');
+        const submitBtn = document.querySelector('#login-form button[type="submit"]');
 
-        // Validate credentials
-        if (username === this.VALID_CREDENTIALS.username &&
-            password === this.VALID_CREDENTIALS.password) {
-            // Success - store auth state and redirect to app
-            Auth.login({
-                username: username,
-                firstName: 'Georgi',
-                lastName: 'Georgiev',
-                role: 'Teacher'
+        // Disable button during request
+        submitBtn.disabled = true;
+        submitBtn.textContent = I18n.t('loggingIn') || 'Logging in...';
+
+        try {
+            const response = await fetch(`${Config.API_BASE_URL}${Config.ENDPOINTS.AUTH_LOGIN}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ username, password })
             });
-            App.showMainApp();
-        } else {
-            // Show error
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Success - store auth state and redirect to app
+                Auth.login({
+                    id: data.user.id,
+                    username: data.user.username,
+                    firstName: data.user.firstName,
+                    lastName: data.user.lastName,
+                    role: data.user.role
+                });
+                App.showMainApp();
+            } else {
+                // Show error
+                errorDiv.textContent = data.error || I18n.t('invalidCredentials');
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('animate-pulse');
+                setTimeout(() => errorDiv.classList.remove('animate-pulse'), 500);
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            errorDiv.textContent = I18n.t('connectionError') || 'Connection error. Please try again.';
             errorDiv.classList.remove('hidden');
-            // Shake animation
             errorDiv.classList.add('animate-pulse');
             setTimeout(() => errorDiv.classList.remove('animate-pulse'), 500);
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.textContent = I18n.t('login');
         }
     },
 

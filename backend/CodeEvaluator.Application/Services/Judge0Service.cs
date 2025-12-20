@@ -18,7 +18,7 @@ namespace CodeEvaluator.Application.Services
         public Judge0Service(Judge0Client client)
         {
           _judge0Client = client;
-          Judge0Config.SetBaseUrl("http://172.30.249.186:2358");
+          Judge0Config.SetBaseUrl("http://172.20.10.3:2358");
         }
 
         public async Task<Judge0ResultDto> ExecuteCodeAsync(Judge0SubmissionDTO submission)
@@ -30,9 +30,12 @@ namespace CodeEvaluator.Application.Services
                 cpu_time_limit = submission.CpuTimeLimit,
                 memory_limit = submission.MemoryLimit,
                 stack_limit = submission.StackLimit,
-                disk_limit = submission.MaxFileSize,
-                stdin = submission.StdIn,
-                expected_output = submission.ExpectedOutput,
+                //disk_limit = submission.MaxFileSize,
+                max_file_size = submission.MaxFileSize,
+                // stdin = submission.StdIn,
+                // expected_output = submission.ExpectedOutput,
+                stdin = Utils.ToBase64(submission.StdIn ?? ""),
+                expected_output = Utils.ToBase64(submission.ExpectedOutput ?? ""),
                 additional_files = submission.AdditionalFiles
                 
             };
@@ -54,9 +57,12 @@ namespace CodeEvaluator.Application.Services
                     cpu_time_limit = submission.CpuTimeLimit,
                     memory_limit = submission.MemoryLimit,
                     stack_limit = submission.StackLimit,
-                    disk_limit = submission.MaxFileSize,
-                    stdin = submission.StdIn,
-                    expected_output = submission.ExpectedOutput,
+                    //disk_limit = submission.MaxFileSize, //judge expectva max_file_size, disk_limit ne e standarten field i moje da bude
+                    max_file_size = submission.MaxFileSize,
+                    // stdin = submission.StdIn,
+                    // expected_output = submission.ExpectedOutput,
+                    stdin = Utils.ToBase64(submission.StdIn ?? ""),
+                    expected_output = Utils.ToBase64(submission.ExpectedOutput ?? ""),
                     additional_files = submission.AdditionalFiles
                 })
             };

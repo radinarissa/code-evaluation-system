@@ -11,10 +11,9 @@ namespace CodeEvaluator.Application.Services
         private readonly string _token;
         private readonly HttpClient _http;
 
-        private const string MoodleUrl =
-            "http://localhost:8000";
+        private const string MoodleUrl = "http://localhost:8000";
 
-        private const string ServiceName = "DotNetAuth";
+        private const string ServiceName = "DotNetAuth"; //промени тук ако еxternal service-ти се казва по друг начин
 
         public MoodleAuthService(HttpClient http, IConfiguration config)
         {

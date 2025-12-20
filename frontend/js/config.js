@@ -11,6 +11,9 @@ const Config = {
 
     // API Endpoints
     ENDPOINTS: {
+        AUTH_LOGIN: '/auth/login',
+        AUTH_LOGOUT: '/auth/logout',
+        AUTH_ME: '/auth/me',
         USERS: '/users',
         COURSES: '/courses',
         TASKS: '/tasks',
