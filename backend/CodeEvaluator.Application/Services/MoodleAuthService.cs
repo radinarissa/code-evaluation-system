@@ -1,21 +1,25 @@
-﻿using System.Net.Http.Json;
-using CodeEvaluator.Application.DTOs;
+﻿using CodeEvaluator.Application.DTOs;
 using CodeEvaluator.Application.Interfaces.Services;
+using Microsoft.Extensions.Configuration;
+using System.Globalization;
+using System.Net.Http.Json;
 
 namespace CodeEvaluator.Application.Services
 {
     public class MoodleAuthService : IMoodleAuthService
     {
+        private readonly string _token;
         private readonly HttpClient _http;
 
         private const string MoodleUrl =
-            "https://fpmi.bg/moodle";
+            "http://localhost:8000";
 
         private const string ServiceName = "DotNetAuth";
 
-        public MoodleAuthService(HttpClient http)
+        public MoodleAuthService(HttpClient http, IConfiguration config)
         {
             _http = http;
+            _token = config["Moodle:ServiceToken"]!;
         }
 
         public async Task<MoodleAuthResult> AuthenticateAsync(
@@ -64,6 +68,42 @@ namespace CodeEvaluator.Application.Services
                 $"&moodlewsrestformat=json");
 
             return siteInfo?.UserId ?? 0;
+        }
+
+        
+        public async Task<bool> SendGradeAsync(
+            int assignmentId,
+            int studentUserId,
+            decimal grade,
+            string feedbackHtml)
+        {
+            var values = new Dictionary<string, string>
+            {
+                ["wstoken"] = _token,
+                ["wsfunction"] = "mod_assign_save_grade",
+                ["moodlewsrestformat"] = "json",
+
+                ["assignmentid"] = assignmentId.ToString(),
+                ["userid"] = studentUserId.ToString(),
+                ["grade"] = grade.ToString(CultureInfo.InvariantCulture),
+                ["attemptnumber"] = "-1",
+                ["addattempt"] = "0",
+                ["workflowstate"] = "graded",
+
+                ["plugindata[assignfeedback_comments][commenttext]"] = feedbackHtml,
+                ["plugindata[assignfeedback_comments][commentformat]"] = "1"
+            };
+
+            var content = new FormUrlEncodedContent(values);
+
+            var response = await _http.PostAsync(
+                $"{MoodleUrl}/webservice/rest/server.php",
+                content);
+
+            var body = await response.Content.ReadAsStringAsync();
+
+            // Moodle returns {} on success
+            return response.IsSuccessStatusCode && body.Trim() == "{}";
         }
 
         private class MoodleTokenResponse
