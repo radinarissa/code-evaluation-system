@@ -24,18 +24,22 @@ namespace CodeEvaluator.Application.Services
 
             if (task == null) throw new Exception("Task not found");
 
-            var highestAttempt = _db.Submissions
-                 .Where(a => a.UserId == dto.MoodleUserId && a.TaskId == task.Id)
-                 .Select(a => a.AttemptNumber)
-                 .ToList()
-                 .DefaultIfEmpty(0)   
-                 .Max();
-        highestAttempt++;
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.MoodleId == dto.MoodleUserId);
+
+            if (user == null) throw new InvalidOperationException($"User with MoodleId={dto.MoodleUserId} not found in backend DB.");
+
+            var highestAttempt = await _db.Submissions
+                .Where(a => a.UserId == user.Id && a.TaskId == task.Id)
+                .MaxAsync(a => (int?)a.AttemptNumber) ?? 0;
+
+            highestAttempt++;
+
            var submission = new Submission
             {   
              Task = task,                     
              Code = dto.SourceCode,
-             UserId = dto.MoodleUserId,
+             //UserId = dto.MoodleUserId,
+             UserId = user.Id,
              MoodleSubmissionId = dto.MoodleSubmissionId,
              AttemptNumber = highestAttempt,
              SubmissionTime = DateTime.UtcNow,
@@ -89,7 +93,7 @@ namespace CodeEvaluator.Application.Services
 
           
             List<string> judgeResult = await _judge0Service.ExecuteBatchCodeAsync(judge0Submissions);
-   //          var submissionsinfo = await _judge0Service.GetSubbmisionBatchAsync(judgeResult); //For some reason returns 0?
+    //          var submissionsinfo = await _judge0Service.GetSubbmisionBatchAsync(judgeResult); //For some reason returns 0?
            
            //should work if order is preserved
            if (judgeResult.Count != testResults.Count)

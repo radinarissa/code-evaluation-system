@@ -12,6 +12,7 @@ using System.Net.Http;
 using CodeEvaluator.Judge0.Client;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text;
 
 namespace CodeEvaluator.Application.Services
 {
@@ -33,8 +34,15 @@ namespace CodeEvaluator.Application.Services
                 var judge0Service = scope.ServiceProvider.GetRequiredService<IJudge0Service>();
 
                 Console.WriteLine("Polling Judge0 for pending results: ");
+                // var pendingResults = await db.TestResults
+                //     .Include(r => r.Submission)
+                //     .Where(r => r.Status == "Pending" && r.Judge0Token != null)
+                //     .ToListAsync(stoppingToken);
+                //include the user aswell
                 var pendingResults = await db.TestResults
                     .Include(r => r.Submission)
+                        .ThenInclude(s => s.User)
+                    .Include(r => r.TestCase)
                     .Where(r => r.Status == "Pending" && r.Judge0Token != null)
                     .ToListAsync(stoppingToken);
                 Console.WriteLine("Found: " + pendingResults.Count);
@@ -65,8 +73,13 @@ namespace CodeEvaluator.Application.Services
                         }
                         testResult.MemoryUsage = res.Memory;
                         testResult.DiskUsedMb = res.FileSize / 1024m;
-                        testResult.Output = res.Stdout;
-                        testResult.ErrorMessage = res.Stderr;
+                        // testResult.Output = res.Stdout;
+                        // testResult.ErrorMessage = res.Stderr;
+                        var stdout = FromBase64(res.Stdout);
+                        var stderr = FromBase64(res.Stderr);
+                        var compile = FromBase64(res.CompileOutput);
+                        testResult.Output = stdout;
+                        testResult.ErrorMessage = !string.IsNullOrWhiteSpace(stderr) ? stderr : !string.IsNullOrWhiteSpace(compile) ? compile : null;
                         testResult.Judge0Token = res.Token;
 
                         Console.WriteLine("updated test result for token: " + res.Token);
@@ -147,7 +160,9 @@ namespace CodeEvaluator.Application.Services
             var feedbackLines = new List<string>();
             feedbackLines.Add($"Успешно преминати тестове: {passedTests} от {totalTests}");
 
-            foreach (var testResult in testResults.Where(tr => tr.Status != "Pass"))
+            // foreach (var testResult in testResults.Where(tr => tr.Status != "Pass"))
+            //It should be Accepted
+            foreach (var testResult in testResults.Where(tr => tr.Status != "Accepted"))
             {
                 string testName = testResult.TestCase.Name;
                 string message = testResult.Status switch
@@ -178,7 +193,7 @@ namespace CodeEvaluator.Application.Services
                           $"&wsfunction=mod_assign_save_grade" +
                           $"&moodlewsrestformat=json" +
                           $"&assignmentid={submission.Task.MoodleAssignmentId}" +
-                          $"&userid={submission.UserId}" +
+                          $"&userid={submission.User.MoodleId}" +
                           $"&grade={grade}" +
                           $"&attemptnumber={submission.AttemptNumber}" +
                           $"&addattempt=0" +
@@ -210,6 +225,14 @@ namespace CodeEvaluator.Application.Services
                 submission.MoodleSyncOutput = ex.Message;
                 Console.WriteLine($"Moodle sync error for submission {submission.Id}: {ex.Message}");
             }
+        }
+
+        //Helper to decode the fields when polling before saving to db 
+        private static string? FromBase64(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return s;
+            try { return Encoding.UTF8.GetString(Convert.FromBase64String(s)); }
+            catch { return s; }
         }
     }
 }
