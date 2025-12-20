@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using CodeEvaluator.Application.Interfaces.Services;
 using Microsoft.OpenApi.Models;
+using CodeEvaluator.Application.Interfaces.Services;
+
 using CodeEvaluator.Application.Services;
 using CodeEvaluator.Judge0.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -33,11 +35,22 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
     options.IncludeXmlComments(xmlPath);
+   
 });
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+
+builder.Services.AddHostedService<CodeEvaluator.Application.Services.Judge0PollingService>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+
+    });
 
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ITaskService, TaskService>();

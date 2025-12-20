@@ -3,6 +3,7 @@ using System;
 using CodeEvaluator.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,13 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeEvaluator.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251218072525_UpdatesBecaseofJudge0")]
+    partial class UpdatesBecaseofJudge0
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -55,6 +58,85 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     b.HasIndex("TaskId");
 
                     b.ToTable("AdditionalFiles", (string)null);
+                });
+
+            modelBuilder.Entity("CodeEvaluator.Domain.Entities.Course", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("MoodleCourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Semester")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MoodleCourseId")
+                        .IsUnique();
+
+                    b.ToTable("Courses", (string)null);
+                });
+
+            modelBuilder.Entity("CodeEvaluator.Domain.Entities.CourseEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CourseId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CourseEnrollments", (string)null);
                 });
 
             modelBuilder.Entity("CodeEvaluator.Domain.Entities.ReferenceSolution", b =>
@@ -187,6 +269,9 @@ namespace CodeEvaluator.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CourseId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CreatedBy")
                         .HasColumnType("integer");
 
@@ -233,10 +318,6 @@ namespace CodeEvaluator.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("TimeLimitS")
-                    b.Property<int>("MoodleCourseId")
-                        .HasColumnType("integer");
-
-                   
                         .ValueGeneratedOnAdd()
                         .HasColumnType("numeric")
                         .HasDefaultValue(3m);
@@ -253,12 +334,12 @@ namespace CodeEvaluator.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CourseId");
+
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("MoodleAssignmentId")
                         .IsUnique();
-
-                    b.HasIndex("MoodleCourseId");
 
                     b.ToTable("Tasks", (string)null);
                 });
@@ -441,6 +522,25 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     b.Navigation("Task");
                 });
 
+            modelBuilder.Entity("CodeEvaluator.Domain.Entities.CourseEnrollment", b =>
+                {
+                    b.HasOne("CodeEvaluator.Domain.Entities.Course", "Course")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CodeEvaluator.Domain.Entities.User", "User")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CodeEvaluator.Domain.Entities.ReferenceSolution", b =>
                 {
                     b.HasOne("CodeEvaluator.Domain.Entities.Task", "Task")
@@ -481,11 +581,19 @@ namespace CodeEvaluator.Infrastructure.Migrations
 
             modelBuilder.Entity("CodeEvaluator.Domain.Entities.Task", b =>
                 {
+                    b.HasOne("CodeEvaluator.Domain.Entities.Course", "Course")
+                        .WithMany("Tasks")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("CodeEvaluator.Domain.Entities.User", "Creator")
                         .WithMany("CreatedTasks")
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Course");
 
                     b.Navigation("Creator");
                 });
@@ -520,6 +628,13 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     b.Navigation("TestCase");
                 });
 
+            modelBuilder.Entity("CodeEvaluator.Domain.Entities.Course", b =>
+                {
+                    b.Navigation("Enrollments");
+
+                    b.Navigation("Tasks");
+                });
+
             modelBuilder.Entity("CodeEvaluator.Domain.Entities.Submission", b =>
                 {
                     b.Navigation("TestResults");
@@ -544,6 +659,8 @@ namespace CodeEvaluator.Infrastructure.Migrations
             modelBuilder.Entity("CodeEvaluator.Domain.Entities.User", b =>
                 {
                     b.Navigation("CreatedTasks");
+
+                    b.Navigation("Enrollments");
 
                     b.Navigation("ReferenceSolutions");
 

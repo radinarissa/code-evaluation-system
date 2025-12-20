@@ -16,4 +16,5 @@ public class TestResult
 
     public TestCase TestCase { get; set; } = null!;
     public Submission Submission { get; set; } = null!;
+
 }
