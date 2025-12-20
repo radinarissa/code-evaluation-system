@@ -17,13 +17,16 @@ namespace CodeEvaluator.Application.DTOs
         public string Stderr { get; set; }
         [JsonPropertyName("compile_output")]
         public string CompileOutput { get; set; }
+        [JsonPropertyName("message")]
+        public string? Message { get; set; }
         [JsonPropertyName("status")]
         public Judge0Status Status { get; set; }
         [JsonPropertyName("time")]
         public string Time { get; set; }
         [JsonPropertyName("memory")]
         public long? Memory { get; set; }
-        public int FileSize { get; set; }
+        [JsonPropertyName("filesize")]
+        public long? FileSize { get; set; }
         [JsonPropertyName("token")]
         public string Token { get; set; }
         [JsonPropertyName("created_at")]

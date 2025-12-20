@@ -67,7 +67,17 @@ builder.Services.AddControllers()
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IJudge0Service, Judge0Service>();
-builder.Services.AddScoped<Judge0Client>();
+//builder.Services.AddScoped<Judge0Client>();
+builder.Services.AddHttpClient<Judge0Client>(client =>
+{
+    var baseUrl = builder.Configuration["Judge0:BaseUrl"];
+    if (string.IsNullOrWhiteSpace(baseUrl))
+        throw new InvalidOperationException("Judge0:BaseUrl is not configured.");
+
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(120);
+});
+
 
 builder.Services.AddHttpClient<IMoodleAuthService, MoodleAuthService>();
 
