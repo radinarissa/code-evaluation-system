@@ -41,6 +41,7 @@ namespace CodeEvaluator.Application.Services
              //UserId = dto.MoodleUserId,
              UserId = user.Id,
              MoodleSubmissionId = dto.MoodleSubmissionId,
+             MoodleAttemptNumber = dto.MoodleAttemptNumber,
              AttemptNumber = highestAttempt,
              SubmissionTime = DateTime.UtcNow,
              Status = "Pending",
