@@ -70,6 +70,7 @@ builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IJudge0Service, Judge0Service>();
 builder.Services.AddScoped<Judge0Client>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddHttpClient<IMoodleAuthService, MoodleAuthService>();
 
