@@ -74,5 +74,14 @@ namespace CodeEvaluator.API.Controllers
             // TODO: Delete task with the given id
             return StatusCode(501, "Not implemented");
         }
+        
+        public record MoodleUpsertResponseDto(int TaskId, int? MoodleAssignmentId);
+        
+        [HttpPost("moodle/upsert")]
+        public async Task<IActionResult> UpsertFromMoodle([FromBody] MoodleTaskUpsertDto dto)
+        {
+            var task = await _taskService.UpsertFromMoodleAsync(dto);
+            return Ok(new MoodleUpsertResponseDto(task.Id, task.MoodleAssignmentId));
+        }
     }
 }
