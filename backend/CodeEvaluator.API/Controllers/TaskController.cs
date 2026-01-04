@@ -20,10 +20,10 @@ namespace CodeEvaluator.API.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
-        public IActionResult GetAllTasks()
+        public async Task<IActionResult> GetAllTasks()
         {
-            // TODO: Return a list of TaskResponseDto
-            return StatusCode(501, "Not implemented");
+            var tasks = await _taskService.GetAllTasksAsync();
+            return Ok(tasks);
         }
 
         /// <summary>
@@ -32,10 +32,11 @@ namespace CodeEvaluator.API.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetTaskById(int id)
+        public async Task<IActionResult> GetTaskById(int id)
         {
-            // TODO: Return TaskResponseDto for the given id
-            return StatusCode(501, "Not implemented");
+            var task = await _taskService.GetTaskByIdAsync(id);
+            if (task == null) return NotFound();
+            return Ok(task);
         }
 
         /// <summary>

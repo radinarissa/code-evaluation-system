@@ -3,6 +3,9 @@ using CodeEvaluator.Application.Interfaces.Services;
 using CodeEvaluator.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using CodeEvaluator.Domain.Entities;
+using Microsoft.VisualBasic;
+using System.Reflection;
+using System.Net.Sockets;
 
 namespace CodeEvaluator.Application.Services
 {
@@ -142,6 +145,73 @@ namespace CodeEvaluator.Application.Services
 
             await _db.SaveChangesAsync();
             return task;
+        }
+
+
+        public async Task<TaskResponseDto?> GetTaskByIdAsync(int id)
+        {
+            var task = await _db.Tasks
+                .Include(t => t.TestCases)
+                .AsNoTracking()
+                .SingleOrDefaultAsync(t => t.Id == id);
+
+            if (task == null) return null;
+
+            return new TaskResponseDto
+            {
+                Id = task.Id,
+                Name = task.Title ?? task.MoodleAssignmentName ?? "",
+                Description = task.Description ?? "",
+                MaxPoints = task.MaxPoints,
+                MaxExecutionTimeMs = task.TimeLimitS * 1000, //convert to ms
+                MemoryLimitKb = task.MemoryLimitKb,
+                MaxDiskUsageMb = task.DiskLimitKb,
+                CreatedAt = task.CreationDate,
+
+                TestCases = task.TestCases
+                    .OrderBy(tc=> tc.ExecutionOrder)
+                    .Select(tc => new TaskTestCaseDto
+                    {
+                        Name = tc.Name,
+                        Input = tc.Input ?? "",
+                        ExpectedOutput = tc.ExpectedOutput ?? "",
+                        IsPublic = tc.IsPublic,
+                        ExecutionOrder = tc.ExecutionOrder,
+                        Points = tc.Points
+                    }).ToList()
+            };
+        }
+
+        public async Task<List<TaskResponseDto>> GetAllTasksAsync()
+        {
+            var tasks = await _db.Tasks
+                .Include(t => t.TestCases)
+                .AsNoTracking()
+                .OrderByDescending(t => t.UpdatedAt)
+                .ToListAsync();
+
+            return tasks.Select(t => new TaskResponseDto
+            {
+                Id = t.Id,
+                Name = t.Title ?? t.MoodleAssignmentName ?? "",
+                Description = t.Description ?? "",
+                MaxPoints = t.MaxPoints,
+                MaxExecutionTimeMs = t.TimeLimitS * 1000,
+                MemoryLimitKb = t.MemoryLimitKb,
+                MaxDiskUsageMb = t.DiskLimitKb,
+                CreatedAt = t.CreationDate,
+                TestCases = t.TestCases
+                    .OrderBy(tc=> tc.ExecutionOrder)
+                    .Select(tc => new TaskTestCaseDto
+                    {
+                        Name = tc.Name,
+                        Input = tc.Input ?? "",
+                        ExpectedOutput = tc.ExpectedOutput ?? "",
+                        IsPublic = tc.IsPublic,
+                        ExecutionOrder = tc.ExecutionOrder,
+                        Points = tc.Points
+                    }).ToList()
+            }).ToList();
         }
     }
 }
