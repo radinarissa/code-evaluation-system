@@ -243,6 +243,44 @@ class assign_submission_codeeval extends assign_submission_plugin {
      * Add elements to the student submission form.
      */
     public function get_form_elements($submission, $mform, $data) {
+        
+        $taskid = (int)$this->get_config('taskid');
+        if ($taskid > 0) {
+            list($httpcode, $body) = $this->backend_get_json('/api/tasks/' . $taskid);
+
+            if ($httpcode >= 200 && $httpcode < 300) {
+                $task = json_decode($body, true);
+                if (is_array($task) && !empty($task['testCases'])) {
+
+                    // filter public tests
+                    $public = array_filter($task['testCases'], function($tc) {
+                        return !empty($tc['isPublic']);
+                    });
+
+                    if (!empty($public)) {
+                        $html = '<div style="border:1px solid #ddd; padding:12px; border-radius:8px; margin-bottom:12px;">';
+                        $html .= '<h4>Example tests</h4>';
+
+                        foreach ($public as $tc) {
+                            $name = htmlspecialchars($tc['name'] ?? 'Example');
+                            $input = htmlspecialchars($tc['input'] ?? '');
+                            $expected = htmlspecialchars($tc['expectedOutput'] ?? '');
+
+                            $html .= "<div style='margin-bottom:10px;'>";
+                            $html .= "<strong>{$name}</strong><br/>";
+                            $html .= "<em>Input:</em><pre>{$input}</pre>";
+                            $html .= "<em>Expected output:</em><pre>{$expected}</pre>";
+                            $html .= "</div>";
+                        }
+
+                        $html .= '</div>';
+                        $mform->addElement('html', $html);
+                    }
+                }
+            } else {
+                error_log("CODEEVAL could not fetch task examples HTTP=$httpcode body=$body");
+            }
+        }
 
         $mform->addElement('textarea', 'codeeval_source', get_string('sourcecode', 'assignsubmission_codeeval'), 'wrap="virtual" rows="20" cols="80"');
         $mform->setType('codeeval_source', PARAM_RAW);
@@ -458,7 +496,25 @@ class assign_submission_codeeval extends assign_submission_plugin {
         }
         return [$code, $body];
         }
+    
+    //helper to fetch a task JSON
+    protected function backend_get_json(string $path): array {
+        $base = get_config('assignsubmission_codeeval', 'backend_url');
+        if (empty($base)) {
+            throw new moodle_exception('backendurl', 'assignsubmission_codeeval');
+        }
 
+        $url = rtrim($base, '/') . $path;
+
+        $curl = new curl();
+        $options = ['CURLOPT_CONNECTTIMEOUT' => 10, 'CURLOPT_TIMEOUT' => 30, ];
+
+        $body = $curl->get($url, [], $options);
+        $info = $curl->get_info();
+        $code = $info['http_code'] ?? 0;
+
+        return [$code, $body];
+    }
 
     //     protected function moodle_ws_post(array $params): array {
     //     $base = get_config('assignsubmission_codeeval', 'moodle_ws_url');
