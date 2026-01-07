@@ -38,6 +38,7 @@ const I18n = {
             activeTasks: 'Активни задачи',
             submissionsCount: 'предавания',
             due: 'Краен срок',
+            viewAll: 'Виж всички',
 
             // Submissions
             allSubmissions: 'Всички предавания',
@@ -149,6 +150,7 @@ const I18n = {
             activeTasks: 'Active Tasks',
             submissionsCount: 'submissions',
             due: 'Due',
+            viewAll: 'View all',
 
             // Submissions
             allSubmissions: 'All Submissions',

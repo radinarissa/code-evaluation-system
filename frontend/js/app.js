@@ -155,6 +155,10 @@ const App = {
         });
     },
 
+    renderCurrentView() {
+    return this.navigateTo(this.currentView);
+    },
+
     /**
      * Navigate to a view
      * @param {string} view - View name
@@ -179,6 +183,12 @@ const App = {
                     break;
                 case 'submissions':
                     html = await SubmissionsView.render();
+                    break;
+                case 'tasks':
+                    html = await TasksView.render();
+                    break;
+                case 'taskForm':
+                    html = await TaskFormView.render();
                     break;
                 case 'statistics':
                     html = await StatisticsView.render();

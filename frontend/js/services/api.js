@@ -1,3 +1,20 @@
+
+function mapSubmissionDtoToUi(s) {
+  return {
+    id: s.id,
+    taskId: s.taskId,
+    userId: s.studentId,
+    // UI expects these names:
+    code: s.sourceCode,
+    status: s.status,
+    finalGrade: s.score, // UI printira {finalGrade}% (mai trqbwa da se scale-ne po kusno)
+    feedback: s.feedback,
+    submissionTime: s.submittedAt,
+    // optional for now:
+    language: s.language,
+  };
+}
+
 /**
  * API Service
  * Provides data access layer that can switch between mock data and real API
@@ -14,6 +31,7 @@ const ApiService = {
     async fetch(endpoint, options = {}) {
         const url = `${Config.API_BASE_URL}${endpoint}`;
         const defaultOptions = {
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -26,6 +44,23 @@ const ApiService = {
         }
 
         return response.json();
+    },
+
+    // ==================== AUTH ====================
+    async login(username, password) {
+    const res = await this.fetch(Config.ENDPOINTS.AUTH_LOGIN, {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+    });
+    return res; // { success, user, error }
+    },
+
+    async logout() {
+    await this.fetch(Config.ENDPOINTS.AUTH_LOGOUT, { method: 'POST' });
+    },
+
+    async me() {
+    return this.fetch(Config.ENDPOINTS.AUTH_ME);
     },
 
     // ==================== USERS ====================
@@ -102,6 +137,7 @@ const ApiService = {
         if (Config.USE_MOCK_DATA) {
             return Promise.resolve([...MockData.tasks]);
         }
+        //return this.fetch(Config.ENDPOINTS.TASKS);
         return this.fetch(Config.ENDPOINTS.TASKS);
     },
 
@@ -115,6 +151,7 @@ const ApiService = {
             const task = MockData.tasks.find(t => t.id === id);
             return Promise.resolve(task ? { ...task } : null);
         }
+        //return this.fetch(`${Config.ENDPOINTS.TASKS}/${id}`);
         return this.fetch(`${Config.ENDPOINTS.TASKS}/${id}`);
     },
 
@@ -141,6 +178,20 @@ const ApiService = {
         return this.fetch(`${Config.ENDPOINTS.TASKS}?isActive=true`);
     },
 
+    async createTask(payload) {
+        return this.fetch(Config.ENDPOINTS.TASKS, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+    },
+
+    async updateTask(id,payload) {
+        return this.fetch(`${Config.ENDPOINTS.TASKS}/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+        });
+    },
+
     // ==================== SUBMISSIONS ====================
 
     /**
@@ -151,7 +202,9 @@ const ApiService = {
         if (Config.USE_MOCK_DATA) {
             return Promise.resolve([...MockData.submissions]);
         }
-        return this.fetch(Config.ENDPOINTS.SUBMISSIONS);
+        //return this.fetch(Config.ENDPOINTS.SUBMISSIONS);
+        const submissions = await this.fetch(Config.ENDPOINTS.SUBMISSIONS);
+        return submissions.map(mapSubmissionDtoToUi);
     },
 
     /**
@@ -164,7 +217,9 @@ const ApiService = {
             const submission = MockData.submissions.find(s => s.id === id);
             return Promise.resolve(submission ? { ...submission } : null);
         }
-        return this.fetch(`${Config.ENDPOINTS.SUBMISSIONS}/${id}`);
+        //return this.fetch(`${Config.ENDPOINTS.SUBMISSIONS}/${id}`);
+        const submissions = await this.fetch(`${Config.ENDPOINTS.SUBMISSIONS}/${id}`);
+        return mapSubmissionDtoToUi(submissions);
     },
 
     /**
@@ -214,7 +269,9 @@ const ApiService = {
         if (Config.USE_MOCK_DATA) {
             return Promise.resolve(MockData.testCases.filter(tc => tc.taskId === taskId));
         }
-        return this.fetch(`${Config.ENDPOINTS.TEST_CASES}?taskId=${taskId}`);
+        //return this.fetch(`${Config.ENDPOINTS.TEST_CASES}?taskId=${taskId}`);
+        const task = await this.getTaskById(taskId);
+        return task?.testCases || [];
     },
 
     // ==================== TEST RESULTS ====================
@@ -239,29 +296,49 @@ const ApiService = {
      * @returns {Promise<Array>} - Submissions with related data
      */
     async getEnrichedSubmissions() {
-        const [submissions, users, tasks, testCases, testResults] = await Promise.all([
+        // const [submissions, users, tasks, testCases, testResults] = await Promise.all([
+        //     this.getSubmissions(),
+        //     this.getUsers(),
+        //     this.getTasks(),
+        //     Config.USE_MOCK_DATA ? Promise.resolve(MockData.testCases) : this.fetch(Config.ENDPOINTS.TEST_CASES),
+        //     Config.USE_MOCK_DATA ? Promise.resolve(MockData.testResults) : this.fetch(Config.ENDPOINTS.TEST_RESULTS)
+        // ]);
+
+        // return submissions.map(submission => {
+        //     const user = users.find(u => u.id === submission.userId);
+        //     const task = tasks.find(t => t.id === submission.taskId);
+        //     const taskTestCases = testCases.filter(tc => tc.taskId === submission.taskId);
+        //     const submissionResults = testResults.filter(tr => tr.submissionId === submission.id);
+        //     const passedTests = submissionResults.filter(tr => tr.status === 'Pass').length;
+
+        //     return {
+        //         ...submission,
+        //         user,
+        //         task,
+        //         studentName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+        //         taskTitle: task ? task.title : 'Unknown',
+        //         passedTests,
+        //         totalTests: taskTestCases.length
+        //     };
+        // });
+        const [submissions, tasks, users] = await Promise.all([
             this.getSubmissions(),
-            this.getUsers(),
             this.getTasks(),
-            Config.USE_MOCK_DATA ? Promise.resolve(MockData.testCases) : this.fetch(Config.ENDPOINTS.TEST_CASES),
-            Config.USE_MOCK_DATA ? Promise.resolve(MockData.testResults) : this.fetch(Config.ENDPOINTS.TEST_RESULTS)
+            this.getUsers()
         ]);
 
         return submissions.map(submission => {
             const user = users.find(u => u.id === submission.userId);
             const task = tasks.find(t => t.id === submission.taskId);
-            const taskTestCases = testCases.filter(tc => tc.taskId === submission.taskId);
-            const submissionResults = testResults.filter(tr => tr.submissionId === submission.id);
-            const passedTests = submissionResults.filter(tr => tr.status === 'Pass').length;
 
             return {
-                ...submission,
-                user,
-                task,
-                studentName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
-                taskTitle: task ? task.title : 'Unknown',
-                passedTests,
-                totalTests: taskTestCases.length
+            ...submission,
+            user,
+            task,
+            studentName: user ? `${user.firstName} ${user.lastName}` : `User #${submission.userId}`,
+            taskTitle: task ? task.name : 'Unknown',
+            passedTests: null,
+            totalTests: task?.testCases?.length ?? 0,
             };
         });
     },
@@ -272,20 +349,35 @@ const ApiService = {
      * @returns {Promise<Array>} - Tasks with related data
      */
     async getEnrichedTasks() {
-        const [tasks, courses, submissions] = await Promise.all([
-            this.getTasks(),
-            this.getCourses(),
-            this.getSubmissions()
+        // const [tasks, courses, submissions] = await Promise.all([
+        //     this.getTasks(),
+        //     this.getCourses(),
+        //     this.getSubmissions()
+        // ]);
+
+        // return tasks.map(task => {
+        //     const course = courses.find(c => c.id === task.courseId);
+        //     const taskSubmissions = submissions.filter(s => s.taskId === task.id);
+
+        //     return {
+        //         ...task,
+        //         course,
+        //         courseName: course ? course.name : 'Unknown',
+        //         submissionCount: taskSubmissions.length
+        //     };
+        // });
+        const [tasks, submissions] = await Promise.all([
+        this.getTasks(),
+        this.getSubmissions()
         ]);
 
         return tasks.map(task => {
-            const course = courses.find(c => c.id === task.courseId);
             const taskSubmissions = submissions.filter(s => s.taskId === task.id);
 
             return {
                 ...task,
-                course,
-                courseName: course ? course.name : 'Unknown',
+                course: null,
+                courseName: '—',
                 submissionCount: taskSubmissions.length
             };
         });
