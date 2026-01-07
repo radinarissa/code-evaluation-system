@@ -181,8 +181,8 @@ const StatisticsView = {
      * @returns {Promise<string>} - HTML content
      */
     async render() {
-        const taskData = await ApiService.getSubmissions();
-        const stats = this.calculateStatistics(taskData.submissions);
+        const submissions = await ApiService.getSubmissions();
+        const stats = this.calculateStatistics(submissions);
 
         return `
             <div class="space-y-6">
