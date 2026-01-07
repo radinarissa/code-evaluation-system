@@ -181,7 +181,7 @@ const StatisticsView = {
      * @returns {Promise<string>} - HTML content
      */
     async render() {
-        const taskData = this.mockTaskStatistics;
+        const taskData = await ApiService.getSubmissions();
         const stats = this.calculateStatistics(taskData.submissions);
 
         return `
