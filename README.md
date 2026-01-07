@@ -20,8 +20,8 @@
   - [Quick Start](#quick-start)
   - [Configuration](#configuration)
   - [Troubleshooting](#troubleshooting)
-  - [Project Structure](#project)
-  - [IDE Recommendations](#IDE)
+  - [Project Structure](#project-structure)
+  - [IDE Recommendations](#ide-recommendations)
 
 
 ## Judge0setup
