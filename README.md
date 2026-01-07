@@ -12,15 +12,15 @@
 
 
 ## Table of Contents
-  - [Judge0](#Judge0setup)
-  - [Postman](#Postman)
-  - [DataBase Setup](#DatabaseSetup)
-  - [Backend Setup](#BackendSetup)
-  - [Frontend Setup](#FrontendSetup)
-  - [Quick Start](#Quick)
-  - [Configuration](#Configuration)
-  - [Troubleshooting](#Troubleshooting)
-  - [Project Structure](#Project)
+  - [Judge0](#judge0setup)
+  - [Postman](#postman)
+  - [DataBase Setup](#database-setup)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Quick Start](#quick-start)
+  - [Configuration](#configuration)
+  - [Troubleshooting](#troubleshooting)
+  - [Project Structure](#project)
   - [IDE Recommendations](#IDE)
 
 
@@ -117,7 +117,7 @@ cd judge0-v1.13.1
 ## Postman
 Информация за най-основните [API calls в judge0](https://bobber-1e394336-9141436.postman.co/workspace/9ffb0b89-7422-4417-ab67-3dcfa60c6089)
 
-## DatabaseSetup
+## Database Setup
 
 ### Install PostgreSQL
 
@@ -172,7 +172,7 @@ Or use **pgAdmin** to connect and verify.
 
 ---
 
-## BackendSetup
+## Backend Setup
 
 ### Install .NET 8 SDK
 
@@ -258,7 +258,9 @@ Backend will be available at:
 
 ---
 
-## FrontendSetup
+## Frontend 
+
+Setup
 
 The frontend uses vanilla HTML/JS with Tailwind CSS (via CDN). No build step required.
 
