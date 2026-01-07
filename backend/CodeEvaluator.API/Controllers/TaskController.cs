@@ -1,6 +1,7 @@
 using CodeEvaluator.Application.Interfaces.Services;
 using CodeEvaluator.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CodeEvaluator.API.Controllers
 {
@@ -45,10 +46,18 @@ namespace CodeEvaluator.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateTask([FromBody] TaskRequestDto dto)
+        // public async Task<IActionResult> CreateTask([FromBody] TaskRequestDto dto)
+        // {
+        //     var assignment = await _taskService.CreateAssignmentAsync(dto);
+        //     return Ok(assignment);
+        // }
+        public async Task<IActionResult> CreateTask([FromBody] TaskUpsertDto dto)
         {
-            var assignment = await _taskService.CreateAssignmentAsync(dto);
-            return Ok(assignment);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId)) return Unauthorized("Missing/invalid user id claim.");
+
+            var created = await _taskService.CreateTaskAsync(dto, userId);
+            return Ok(created);
         }
 
         /// <summary>
@@ -58,10 +67,14 @@ namespace CodeEvaluator.API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult UpdateTask(int id, [FromBody] TaskRequestDto request)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskUpsertDto dto)
         {
-            // TODO: Map TaskRequestDto to domain model and update the task with the given id
-            return StatusCode(501, "Not implemented");
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId)) return Unauthorized("Missing/invalid user id claim.");
+
+            var updated = await _taskService.UpdateTaskAsync(id, dto, userId);
+            if (updated == null) return NotFound();
+            return Ok(updated);
         }
 
         /// <summary>

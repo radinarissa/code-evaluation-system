@@ -12,5 +12,8 @@ namespace CodeEvaluator.Application.Interfaces.Services
         Task<TaskResponseDto?> GetTaskByIdAsync(int id);
 
         Task<List<TaskResponseDto>> GetAllTasksAsync();
+
+        Task<TaskResponseDto> CreateTaskAsync(TaskUpsertDto dto, int createdByUserId);
+        Task<TaskResponseDto?> UpdateTaskAsync(int id, TaskUpsertDto dto, int updatedByUserId);
     }
 }

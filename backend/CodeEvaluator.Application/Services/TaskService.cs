@@ -28,14 +28,14 @@ namespace CodeEvaluator.Application.Services
                 Description = dto.Description,
                 CreationDate = DateTime.UtcNow,
                 MaxPoints = dto.MaxPoints,
-                TimeLimitS = dto.MaxExecutionTimeMs,
-                DiskLimitKb = dto.MaxDiskUsageMb,
+                TimeLimitS = dto.MaxExecutionTimeMs / 1000,
+                DiskLimitKb = dto.MaxDiskUsageMb * 1024,
                 CreatedBy = dto.CreatedByUserid,
                 DueDate = dto.DueDate,
                 IsActive = dto.IsActive,
                 UpdatedAt = dto.UpdatedAt,
                 Title = dto.Title,
-                MemoryLimitKb = dto.MemoryLimitMb,
+                MemoryLimitKb = dto.MemoryLimitMb * 1024,
                 MoodleCourseId = dto.CourseId,
                 TestCases = dto.TestCases.Select(x => new Domain.Entities.TestCase
                 {
@@ -165,7 +165,7 @@ namespace CodeEvaluator.Application.Services
                 MaxPoints = task.MaxPoints,
                 MaxExecutionTimeMs = task.TimeLimitS * 1000, //convert to ms
                 MemoryLimitKb = task.MemoryLimitKb,
-                MaxDiskUsageMb = task.DiskLimitKb,
+                MaxDiskUsageMb = task.DiskLimitKb / 1024,
                 CreatedAt = task.CreationDate,
 
                 TestCases = task.TestCases
@@ -198,7 +198,7 @@ namespace CodeEvaluator.Application.Services
                 MaxPoints = t.MaxPoints,
                 MaxExecutionTimeMs = t.TimeLimitS * 1000,
                 MemoryLimitKb = t.MemoryLimitKb,
-                MaxDiskUsageMb = t.DiskLimitKb,
+                MaxDiskUsageMb = t.DiskLimitKb / 1000,
                 CreatedAt = t.CreationDate,
                 TestCases = t.TestCases
                     .OrderBy(tc=> tc.ExecutionOrder)
@@ -212,6 +212,77 @@ namespace CodeEvaluator.Application.Services
                         Points = tc.Points
                     }).ToList()
             }).ToList();
+        }
+
+
+        public async Task<TaskResponseDto> CreateTaskAsync(TaskUpsertDto dto, int createdByUserId)
+        {
+            var task = new Domain.Entities.Task
+            {
+                Title = dto.Title,
+                Description = dto.Description ?? "",
+                MaxPoints = dto.MaxPoints,
+                TimeLimitS = dto.MaxExecutionTimeMs / 1000,
+                MemoryLimitKb = dto.MemoryLimitKb,
+                DiskLimitKb = dto.MaxDiskUsageMb * 1024,
+                CreationDate = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsActive = true,
+                CreatedBy = createdByUserId,
+                MoodleCourseId = 0 // TODO later
+            };
+
+            foreach (var tc in dto.TestCases.OrderBy(x => x.ExecutionOrder))
+            {
+                task.TestCases.Add(new TestCase
+                {
+                    Name = tc.Name,
+                    Input = tc.Input,
+                    ExpectedOutput = tc.ExpectedOutput,
+                    IsPublic = tc.IsPublic,
+                    ExecutionOrder = tc.ExecutionOrder,
+                    Points = tc.Points
+                });
+            }
+
+            _db.Tasks.Add(task);
+            await _db.SaveChangesAsync();
+
+            return await GetTaskByIdAsync(task.Id) ?? throw new Exception("Created task not found");
+        }
+
+        public async Task<TaskResponseDto?> UpdateTaskAsync(int id, TaskUpsertDto dto, int updatedByUserId)
+        {
+            var task = await _db.Tasks.Include(t => t.TestCases).SingleOrDefaultAsync(t => t.Id == id);
+            if (task == null) return null;
+
+            task.Title = dto.Title;
+            task.Description = dto.Description ?? "";
+            task.MaxPoints = dto.MaxPoints;
+            task.TimeLimitS = dto.MaxExecutionTimeMs / 1000;
+            task.MemoryLimitKb = dto.MemoryLimitKb;
+            task.DiskLimitKb = dto.MaxDiskUsageMb * 1024;
+            task.UpdatedAt = DateTime.UtcNow;
+
+            _db.TestCases.RemoveRange(task.TestCases);
+            task.TestCases.Clear();
+
+            foreach (var tc in dto.TestCases.OrderBy(x => x.ExecutionOrder))
+            {
+                task.TestCases.Add(new TestCase
+                {
+                    Name = tc.Name,
+                    Input = tc.Input,
+                    ExpectedOutput = tc.ExpectedOutput,
+                    IsPublic = tc.IsPublic,
+                    ExecutionOrder = tc.ExecutionOrder,
+                    Points = tc.Points
+                });
+            }
+
+            await _db.SaveChangesAsync();
+
+            return await GetTaskByIdAsync(task.Id);
         }
     }
 }
