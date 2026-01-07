@@ -258,7 +258,7 @@ Backend will be available at:
 
 ---
 
-## Frontend 
+## Frontend Setup
 
 Setup
 
