@@ -189,8 +189,6 @@ const StatisticsView = {
             this.taskId = allTasks.length > 0 ? allTasks[0].id : 0;
         }
 
-        console.log(this.taskId);
-
         const [submissions, tasks, task] = await Promise.all([
             ApiService.getSubmissionsByTaskId(this.taskId),
             ApiService.getTasks(),
@@ -382,7 +380,7 @@ const StatisticsView = {
     async changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
         StatisticsView.taskId = parseInt(taskId);
-        console.log(taskId);
+
         document.getElementById('content').innerHTML = await StatisticsView.render();
     }
 };
