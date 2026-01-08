@@ -195,7 +195,7 @@ const StatisticsView = {
             ApiService.getTaskById(this.taskId)
         ]);
 
-        const course = await ApiService.getCourseById(task.moodleCourseId);
+        const course = await ApiService.getCourseById(task.courseId);
 
         const stats = this.calculateStatistics(submissions);
 
