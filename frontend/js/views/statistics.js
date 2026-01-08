@@ -185,7 +185,7 @@ const StatisticsView = {
             ApiService.getSubmissions()
         ]);
 
-        const course = await AppService.getCourseById(taskData.task.courseId);
+        //const course = await ApiService.getCourseById(taskData.task.courseId);
 
         const stats = this.calculateStatistics(taskData.submissions);
 
