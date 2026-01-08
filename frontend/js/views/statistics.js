@@ -3,6 +3,7 @@
  * Displays task statistics based on FR-3.2 requirements
  */
 const StatisticsView = {
+    taskId,
     // Mock statistics data - matches backend Submission model
     // Grade is on Bulgarian scale: 2 (Слаб) to 6 (Отличен)
     mockTaskStatistics: {
@@ -181,11 +182,13 @@ const StatisticsView = {
      * @returns {Promise<string>} - HTML content
      */
     async render() {
-        const [submissions] = await Promise.all([
-            ApiService.getSubmissions()
+        const [submissions, tasks, task] = await Promise.all([
+            ApiService.getSubmissionsByTaskId(this.taskId),
+            ApiService.getTasks(),
+            ApiService.getTaskById(this.taskId)
         ]);
 
-        //const course = await ApiService.getCourseById(taskData.task.courseId);
+        const course = await ApiService.getCourseById(taskData.task.courseId);
 
         const stats = this.calculateStatistics(submissions);
 
@@ -195,13 +198,11 @@ const StatisticsView = {
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml()}</h3>
-                            <p class="text-sm text-gray-500">${Utils.escapeHtml()}</p>
+                            <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml(task.title)}</h3>
+                            <p class="text-sm text-gray-500">${Utils.escapeHtml(course.name)}</p>
                         </div>
                         <select id="task-selector" class="border rounded-lg px-4 py-2" onchange="StatisticsView.changeTask(this.value)">
-                            <option value="1" selected>${I18n.t('task')} 1: Двоично търсене</option>
-                            <option value="2">${I18n.t('task')} 2: Свързан списък</option>
-                            <option value="3">${I18n.t('task')} 3: Бързо сортиране</option>
+                            ${tasks.map(t => `<option value="${t.id}">${Utils.escapeHtml(t.title)}</option>`).join('')}
                         </select>
                     </div>
                 </div>
@@ -375,5 +376,6 @@ const StatisticsView = {
     changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
         alert(`${I18n.t('loadingStatisticsFor')} Task #${taskId}\n\n(${I18n.t('mockDataNote')})`);
+        this.taskId = taskId;
     }
 };
