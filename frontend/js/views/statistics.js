@@ -3,7 +3,7 @@
  * Displays task statistics based on FR-3.2 requirements
  */
 const StatisticsView = {
-    taskId = await ApiService.getTasks[0].Id,
+    taskId,
     // Mock statistics data - matches backend Submission model
     // Grade is on Bulgarian scale: 2 (Слаб) to 6 (Отличен)
     mockTaskStatistics: {
@@ -182,6 +182,9 @@ const StatisticsView = {
      * @returns {Promise<string>} - HTML content
      */
     async render() {
+        if (!this.taskId)
+            this.taskId = await ApiService.getTasks[0].Id;
+
         const [submissions, tasks, task] = await Promise.all([
             ApiService.getSubmissionsByTaskId(this.taskId),
             ApiService.getTasks(),
