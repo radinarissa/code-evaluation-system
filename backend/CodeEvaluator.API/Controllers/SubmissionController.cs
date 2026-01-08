@@ -38,7 +38,7 @@ namespace CodeEvaluator.API.Controllers
 
         }
 
-        [Route("api/submissions/GetSubmissionsByTaskId")]
+        [Route("GetSubmissionsByTaskId")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<SubmissionResponseDto>), StatusCodes.Status200OK)]
         public IActionResult GetSubmissionsByTaskId(int taskId)
