@@ -185,7 +185,7 @@ const StatisticsView = {
         if (!this.taskId)
         {
             let allTasks = await ApiService.getTasks();
-            console.log(this.taskId);
+            console.log(allTasks);
             this.taskId = allTasks.length > 0 ? allTasks[0].Id : 0;
         }
         console.log(this.taskId);
