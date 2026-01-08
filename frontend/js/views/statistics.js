@@ -344,7 +344,7 @@ const StatisticsView = {
         return submissions.map(s => `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium">${students.filter(s => s.id === s.studentId).length > 0 ? students.filter(s => s.id === s.studentId)[0].fullName : ""}</span>
+                    <span class="font-medium">${students.filter(stu => stu.moodleId === s.studentId).length > 0 ? students.filter(stu => stu.moodleId === s.studentId)[0].fullName : ""}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="font-medium ${(s.score / maxPoints) * 4 + 2 >= 5 ? 'text-green-600' : (s.score / maxPoints) * 4 + 2 >= 4 ? 'text-blue-600' : (s.score / maxPoints) * 4 + 2 >= 3 ? 'text-orange-600' : 'text-red-600'}">
