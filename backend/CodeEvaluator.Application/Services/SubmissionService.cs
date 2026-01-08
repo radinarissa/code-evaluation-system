@@ -156,6 +156,9 @@ namespace CodeEvaluator.Application.Services
             return ISubmissionService.Status.Success;
         }
 
-    
+        public List<Submission> GetSubmissionsByTaskId(int taskId)
+        {
+            return _db.Submissions.Where(x => x.TaskId == taskId).ToList();
+        }
     }
 }

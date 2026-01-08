@@ -10,6 +10,7 @@ namespace CodeEvaluator.Application.Interfaces.Services
         Task<Submission?> GetSubmissionByIdAsync(int id);
        SubmissionResponseDto ConvertSubmissiontoSubmissionResponseDto(Submission submission);
        List<Submission> GetAllSubmissions();
+       List<Submission> GetSubmissionsByTaskId(int taskId);
        Task<Status> DeleteSubmissionAsync(int id);
 
        public enum Status

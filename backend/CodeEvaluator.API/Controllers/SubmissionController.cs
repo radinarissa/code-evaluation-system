@@ -38,6 +38,23 @@ namespace CodeEvaluator.API.Controllers
 
         }
 
+        [Route("api/submissions/GetSubmissionsByTaskId")]
+        [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<SubmissionResponseDto>), StatusCodes.Status200OK)]
+        public IActionResult GetSubmissionsByTaskId(int taskId)
+        {
+            List<Submission> submissions = _submissionService.GetSubmissionsByTaskId(taskId);
+            var responseDtos = new List<SubmissionResponseDto>();
+            foreach (var i in submissions)
+            {
+                SubmissionResponseDto responseDto = _submissionService.ConvertSubmissiontoSubmissionResponseDto(i);
+                responseDtos.Add(responseDto);
+            }
+
+            return Ok(responseDtos);
+
+        }
+
         /// <summary>
         /// Returns a single submission by its id.
         /// </summary>

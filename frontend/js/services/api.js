@@ -231,7 +231,7 @@ const ApiService = {
         if (Config.USE_MOCK_DATA) {
             return Promise.resolve(MockData.submissions.filter(s => s.taskId === taskId));
         }
-        return this.fetch(`${Config.ENDPOINTS.SUBMISSIONS}?taskId=${taskId}`);
+        return this.fetch(`${Config.ENDPOINTS.SUBMISSIONS}/GetSubmissionsByTaskId?taskId=${taskId}`);
     },
 
     /**
