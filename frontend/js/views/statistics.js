@@ -381,7 +381,7 @@ const StatisticsView = {
      */
     async changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
-        StatisticsView.taskId = taskId;
+        StatisticsView.taskId = parseInt(taskId);
         console.log(taskId);
         document.getElementById('content').innerHTML = await StatisticsView.render();
     }
