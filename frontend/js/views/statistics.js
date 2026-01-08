@@ -94,10 +94,11 @@ const StatisticsView = {
         const sortedGrades = [...grades].sort((a, b) => a - b);
         const medianGrade = this.calculateMedian(sortedGrades);
         const minGrade = Math.min(...grades);
+        console.log(minGrade);
         const maxGrade = Math.max(...grades);
 
-        const perfectScorePercent = ((grades.filter(g => g === 6).length / grades.length) * 100).toFixed(1);
-        const failingScorePercent = ((grades.filter(g => g === 2).length / grades.length) * 100).toFixed(1);
+        const perfectScorePercent = ((grades.filter(g => g >= 5.5).length / grades.length) * 100).toFixed(1);
+        const failingScorePercent = ((grades.filter(g => g <= 2.5).length / grades.length) * 100).toFixed(1);
 
         return {
             general: {
