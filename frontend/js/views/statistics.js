@@ -262,7 +262,6 @@ const StatisticsView = {
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('student')}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('attemptNumber')}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('grade')}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('submitted')}</th>
                                 </tr>
