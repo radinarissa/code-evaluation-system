@@ -181,8 +181,7 @@ const StatisticsView = {
      * Render the statistics view
      * @returns {Promise<string>} - HTML content
      */
-    async render() {
-        console.log(!this.taskId);
+    async render() {;
         if (!this.taskId)
         {
             let allTasks = await ApiService.getTasks();
@@ -380,7 +379,7 @@ const StatisticsView = {
      */
     async changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
-        this.taskId = taskId;
+        StatisticsView.taskId = taskId;
         console.log(taskId);
         document.getElementById('content').innerHTML = await StatisticsView.render();
     }
