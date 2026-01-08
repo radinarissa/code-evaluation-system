@@ -338,7 +338,7 @@ const StatisticsView = {
      * @param {Array} submissions - Submissions array
      * @returns {string} - HTML table rows
      */
-    renderRecentSubmissions(submissions, maxPoints) {
+    async renderRecentSubmissions(submissions, maxPoints) {
         // Map user IDs to names (mock)
         const students = await ApiService.getEnrichedStudents();
 
