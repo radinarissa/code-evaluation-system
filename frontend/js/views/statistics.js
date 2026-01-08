@@ -187,7 +187,7 @@ const StatisticsView = {
 
         //const course = await ApiService.getCourseById(taskData.task.courseId);
 
-        const stats = this.calculateStatistics(taskData.submissions);
+        const stats = this.calculateStatistics(submissions);
 
         return `
             <div class="space-y-6">
@@ -263,7 +263,7 @@ const StatisticsView = {
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
-                                ${this.renderRecentSubmissions(taskData.submissions.slice(-5).reverse())}
+                                ${this.renderRecentSubmissions(submissions.slice(-5).reverse())}
                             </tbody>
                         </table>
                     </div>
