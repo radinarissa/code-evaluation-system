@@ -2,9 +2,10 @@ namespace CodeEvaluator.Application.DTOs
 {
     public class MoodleTaskUpsertDto
     {
-        public int MoodleCourseId { get; set; }
-        public int MoodleAssignmentId { get; set; }
-        public string MoodleAssignmentName { get; set; } = default!;
+        public int? TaskId {get; set; }
+        public int? MoodleCourseId { get; set; }
+        public int? MoodleAssignmentId { get; set; }
+        public string? MoodleAssignmentName { get; set; } = default!;
 
         public MoodleUserDto? Teacher { get; set; } = new();
         public int? MoodleTeacherUserId { get; set; } // Moodle user id
@@ -18,7 +19,7 @@ namespace CodeEvaluator.Application.DTOs
         public int DiskLimitKb { get; set; } = 256;
         public int? StackLimitKb { get; set; }
 
-        public List<MoodleTestCaseDto> TestCases { get; set; } = new();
+        public List<MoodleTestCaseDto>? TestCases { get; set; } /*= new();*/
     }
 
     public class MoodleTestCaseDto

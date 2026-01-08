@@ -2,11 +2,13 @@ using CodeEvaluator.Application.Interfaces.Services;
 using CodeEvaluator.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CodeEvaluator.API.Controllers
 {
     [ApiController]
     [Route("api/tasks")]
+    [Authorize]
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _taskService;
@@ -90,8 +92,9 @@ namespace CodeEvaluator.API.Controllers
         }
         
         public record MoodleUpsertResponseDto(int TaskId, int? MoodleAssignmentId);
-        
-        [HttpPost("moodle/upsert")]
+
+        [AllowAnonymous]
+        [HttpPost("moodle/upsert")] 
         public async Task<IActionResult> UpsertFromMoodle([FromBody] MoodleTaskUpsertDto dto)
         {
             var task = await _taskService.UpsertFromMoodleAsync(dto);

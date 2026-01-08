@@ -68,6 +68,18 @@ namespace CodeEvaluator.Application.Services
 
             foreach (var testCase in testCases)
             {
+            const int JUDGE0_MAX_FILE_SIZE_KB = 4096;
+
+            var maxFileSizeKb = task.DiskLimitKb;
+            if (maxFileSizeKb <= 0)
+            {
+                maxFileSizeKb = JUDGE0_MAX_FILE_SIZE_KB;
+            }
+            else
+            {
+                maxFileSizeKb = Math.Min(maxFileSizeKb, JUDGE0_MAX_FILE_SIZE_KB);
+            }
+
             Judge0SubmissionDTO judge0sub = new Judge0SubmissionDTO
             {
                 SourceCode = dto.SourceCode,
@@ -75,7 +87,7 @@ namespace CodeEvaluator.Application.Services
                 CpuTimeLimit = task.TimeLimitS,
                 MemoryLimit = task.MemoryLimitKb,
                 StackLimit = task.StackLimitKb,
-                MaxFileSize = task.DiskLimitKb,
+                MaxFileSize = maxFileSizeKb,
                 StdIn = testCase.Input,
                 ExpectedOutput = testCase.ExpectedOutput
             };
