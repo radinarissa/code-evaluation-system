@@ -11,10 +11,12 @@ namespace CodeEvaluator.API.Controllers
     public class SubmissionController : ControllerBase
     {
         private readonly ISubmissionService _submissionService;
-
-        public SubmissionController(ISubmissionService submissionService)
+        private readonly IUserService _userService;
+        
+        public SubmissionController(ISubmissionService submissionService, IUserService userService)
         {
             _submissionService = submissionService;
+            _userService = userService;
         }
 
         /// <summary>
@@ -25,6 +27,23 @@ namespace CodeEvaluator.API.Controllers
         public IActionResult GetAllSubmissions()
         {
             List<Submission> submissions = _submissionService.GetAllSubmissions();
+            var responseDtos = new List<SubmissionResponseDto>();
+            foreach (var i in submissions)
+            {
+                SubmissionResponseDto responseDto = _submissionService.ConvertSubmissiontoSubmissionResponseDto(i);
+                responseDtos.Add(responseDto);
+            }
+
+            return Ok(responseDtos);
+
+        }
+
+        [Route("GetSubmissionsByTaskId")]
+        [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<SubmissionResponseDto>), StatusCodes.Status200OK)]
+        public IActionResult GetSubmissionsByTaskId(int taskId)
+        {
+            List<Submission> submissions = _submissionService.GetSubmissionsByTaskId(taskId);
             var responseDtos = new List<SubmissionResponseDto>();
             foreach (var i in submissions)
             {
@@ -60,6 +79,16 @@ namespace CodeEvaluator.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateSubmission([FromBody] SubmissionRequestDto dto)
         {
+            // var submission = await _submissionService.CreateSubmissionAndRunJudge0Async(dto);
+            // return Ok(submission);
+            // If Moodle didn't send user info, fail clearly
+            if (dto.User == null || dto.User.MoodleId <= 0)
+                return BadRequest("Missing dto.user.moodleId (Moodle user info is required).");
+
+            var dbUser = await _userService.UpsertFromMoodleAsync(dto.User);
+            
+            dto.StudentId = dbUser.Id;
+
             var submission = await _submissionService.CreateSubmissionAndRunJudge0Async(dto);
             return Ok(submission);
         }

@@ -60,16 +60,30 @@ builder.Services.AddHostedService<CodeEvaluator.Application.Services.Judge0Polli
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-
+        //options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 builder.Services.AddHttpClient();
+
+// Judge0 base URL
+var judge0BaseUrl =
+    Environment.GetEnvironmentVariable("JUDGE0_BASEURL")
+    ?? builder.Configuration["Judge0:BaseUrl"];
+
+if (string.IsNullOrWhiteSpace(judge0BaseUrl))
+{
+    throw new Exception("Judge0 BaseUrl not configured. Set Judge0:BaseUrl or env var JUDGE0_BASEURL.");
+}
+
+Judge0Config.SetBaseUrl(judge0BaseUrl);
+Console.WriteLine($"Judge0 BaseUrl = {judge0BaseUrl}");
 
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IJudge0Service, Judge0Service>();
 builder.Services.AddScoped<Judge0Client>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddHttpClient<IMoodleAuthService, MoodleAuthService>();
 

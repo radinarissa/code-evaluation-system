@@ -1,11 +1,14 @@
 using CodeEvaluator.Application.Interfaces.Services;
 using CodeEvaluator.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CodeEvaluator.API.Controllers
 {
     [ApiController]
     [Route("api/tasks")]
+    [Authorize]
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _taskService;
@@ -20,10 +23,10 @@ namespace CodeEvaluator.API.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
-        public IActionResult GetAllTasks()
+        public async Task<IActionResult> GetAllTasks()
         {
-            // TODO: Return a list of TaskResponseDto
-            return StatusCode(501, "Not implemented");
+            var tasks = await _taskService.GetAllTasksAsync();
+            return Ok(tasks);
         }
 
         /// <summary>
@@ -32,10 +35,11 @@ namespace CodeEvaluator.API.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetTaskById(int id)
+        public async Task<IActionResult> GetTaskById(int id)
         {
-            // TODO: Return TaskResponseDto for the given id
-            return StatusCode(501, "Not implemented");
+            var task = await _taskService.GetTaskByIdAsync(id);
+            if (task == null) return NotFound();
+            return Ok(task);
         }
 
         /// <summary>
@@ -44,10 +48,18 @@ namespace CodeEvaluator.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateTask([FromBody] TaskRequestDto dto)
+        // public async Task<IActionResult> CreateTask([FromBody] TaskRequestDto dto)
+        // {
+        //     var assignment = await _taskService.CreateAssignmentAsync(dto);
+        //     return Ok(assignment);
+        // }
+        public async Task<IActionResult> CreateTask([FromBody] TaskUpsertDto dto)
         {
-            var assignment = await _taskService.CreateAssignmentAsync(dto);
-            return Ok(assignment);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId)) return Unauthorized("Missing/invalid user id claim.");
+
+            var created = await _taskService.CreateTaskAsync(dto, userId);
+            return Ok(created);
         }
 
         /// <summary>
@@ -57,10 +69,14 @@ namespace CodeEvaluator.API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult UpdateTask(int id, [FromBody] TaskRequestDto request)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskUpsertDto dto)
         {
-            // TODO: Map TaskRequestDto to domain model and update the task with the given id
-            return StatusCode(501, "Not implemented");
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId)) return Unauthorized("Missing/invalid user id claim.");
+
+            var updated = await _taskService.UpdateTaskAsync(id, dto, userId);
+            if (updated == null) return NotFound();
+            return Ok(updated);
         }
 
         /// <summary>
@@ -73,6 +89,16 @@ namespace CodeEvaluator.API.Controllers
         {
             // TODO: Delete task with the given id
             return StatusCode(501, "Not implemented");
+        }
+        
+        public record MoodleUpsertResponseDto(int TaskId, int? MoodleAssignmentId);
+
+        [AllowAnonymous]
+        [HttpPost("moodle/upsert")] 
+        public async Task<IActionResult> UpsertFromMoodle([FromBody] MoodleTaskUpsertDto dto)
+        {
+            var task = await _taskService.UpsertFromMoodleAsync(dto);
+            return Ok(new MoodleUpsertResponseDto(task.Id, task.MoodleAssignmentId));
         }
     }
 }

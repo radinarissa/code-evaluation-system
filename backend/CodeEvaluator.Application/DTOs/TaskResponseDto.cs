@@ -17,7 +17,9 @@ namespace CodeEvaluator.Application.DTOs
 
         public int MaxDiskUsageMb { get; set; }
 
-        public int MaxPoints { get; set; }
+        public int MemoryLimitKb { get; set; }
+
+        public decimal MaxPoints { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

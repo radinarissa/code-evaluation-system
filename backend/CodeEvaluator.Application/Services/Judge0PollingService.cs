@@ -122,10 +122,12 @@ namespace CodeEvaluator.Application.Services
 
                         var allresultsforsubmission = db.TestResults.Where(sb => sb.SubmissionId == testResult.Submission.Id);
                        // bool alldone = allresultsforsubmission.All(ares => ares.Status != "Pending");
+                        
+                        await db.SaveChangesAsync(stoppingToken);
 
-                       bool alldone = pendingResults
+                        bool alldone = await db.TestResults
                             .Where(tr => tr.SubmissionId == testResult.Submission.Id)
-                            .All(tr => tr.Status != "Pending");
+                            .AllAsync(tr => tr.Status != "Pending", stoppingToken);
 
                         if (alldone)
                         {
@@ -159,7 +161,7 @@ namespace CodeEvaluator.Application.Services
                             testResult.Submission.Feedback = feedback;
 
                             Console.WriteLine($"Submission {testResult.Submission.Id} completed: {finalGrade}/{maxPoints} points");
-
+                            
                             if (testResult.Submission.MoodleSubmissionId.HasValue)
                             {
                                 var httpClient = scope.ServiceProvider.GetRequiredService<HttpClient>();
@@ -211,8 +213,17 @@ namespace CodeEvaluator.Application.Services
             try
             {
                 var moodleUrl = "http://localhost:8000";
-                var wsToken = "bf739980f1493b05364cb573ce2fb009"; //moodle token
+                var wsToken = "3c1dac98be6c27f6b04cc90ef1bdd19d"; //moodle token
 
+                if (submission.Task.MoodleAssignmentId == null)
+                    throw new Exception("Task.MoodleAssignmentId is null");
+
+                if (submission.User?.MoodleId == null)
+                    throw new Exception("Submission.User.MoodleId is null (ensure User is included/loaded)");
+
+                if (submission.MoodleAttemptNumber == null)
+                    throw new Exception("Submission.MoodleAttemptNumber is null (plugin must send it)");
+                
                 var url = $"{moodleUrl}/webservice/rest/server.php" +
                           $"?wstoken={wsToken}" +
                           $"&wsfunction=mod_assign_save_grade" +
@@ -220,28 +231,102 @@ namespace CodeEvaluator.Application.Services
                           $"&assignmentid={submission.Task.MoodleAssignmentId}" +
                           $"&userid={submission.User.MoodleId}" +
                           $"&grade={grade}" +
-                          $"&attemptnumber={submission.AttemptNumber}" +
+                          $"&attemptnumber={submission.MoodleAttemptNumber}" +
                           $"&addattempt=0" +
-                          $"&workflowstate=" +
+                          $"&workflowstate=released" +
                           $"&applytoall=0";
 
-                var feedbackUrl = url + $"&plugindata[assignfeedbackcomments_editor][text]={Uri.EscapeDataString(feedback)}" +
-                                       $"&plugindata[assignfeedbackcomments_editor][format]=1";
+                // var feedbackUrl = url + $"&plugindata[assignfeedbackcomments_editor][text]={Uri.EscapeDataString(feedback)}" +
+                //                        $"&plugindata[assignfeedbackcomments_editor][format]=1";
 
-                var response = await httpClient.PostAsync(feedbackUrl, null);
+                //var response = await httpClient.PostAsync(feedbackUrl, null);
 
-                if (response.IsSuccessStatusCode)
+                // var endpoint = $"{moodleUrl}/webservice/rest/server.php";
+
+                // var form = new Dictionary<string, string>
+                // {
+                //     ["wstoken"] = wsToken,
+                //     ["wsfunction"] = "mod_assign_save_grade",
+                //     ["moodlewsrestformat"] = "json",
+                //     ["assignmentid"] = submission.Task.MoodleAssignmentId?.ToString() ?? "",
+                //     ["userid"] = submission.User.MoodleId.ToString(),
+                //     ["grade"] = grade.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                //     ["attemptnumber"] = (submission.MoodleAttemptNumber ?? 0).ToString(),
+                //     ["addattempt"] = "0",
+                //     ["workflowstate"] = "released",
+                //     ["applytoall"] = "0",
+                //     ["plugindata[assignfeedbackcomments_editor][text]"] = feedback,
+                //     ["plugindata[assignfeedbackcomments_editor][format]"] = "1",
+                // };
+
+                // using var content = new FormUrlEncodedContent(form);
+                // var response = await httpClient.PostAsync(endpoint, content);
+                // var body = await response.Content.ReadAsStringAsync();
+                // Console.WriteLine($"Moodle sync HTTP={(int)response.StatusCode} body={body}");
+
+                // if (response.IsSuccessStatusCode)
+                // {
+                //     submission.MoodleSyncStatus = "Synced";
+                //     submission.MoodleSyncCreatedAt = DateTime.UtcNow;
+                //     Console.WriteLine($"Moodle sync successful for submission {submission.Id}");
+                // }
+                // else
+                // {
+                //     var errorContent = await response.Content.ReadAsStringAsync();
+                //     submission.MoodleSyncStatus = "Failed";
+                //     submission.MoodleSyncOutput = errorContent;
+                //     Console.WriteLine($"Moodle sync failed for submission {submission.Id}: {errorContent}");
+                // }
+                var siteInfoForm = new Dictionary<string, string>
+                {
+                    ["wstoken"] = wsToken,
+                    ["wsfunction"] = "core_webservice_get_site_info",
+                    ["moodlewsrestformat"] = "json",
+                };
+
+                var infoResp = await httpClient.PostAsync(
+                    $"{moodleUrl}/webservice/rest/server.php",
+                    new FormUrlEncodedContent(siteInfoForm)
+                );
+
+                var infoBody = await infoResp.Content.ReadAsStringAsync();
+                Console.WriteLine($"SITE_INFO HTTP={(int)infoResp.StatusCode} body={infoBody}");
+
+
+                var form = new Dictionary<string, string>
+                {
+                    ["wstoken"] = wsToken,
+                    ["wsfunction"] = "mod_assign_save_grade",
+                    ["moodlewsrestformat"] = "json",
+                    ["assignmentid"] = submission.Task.MoodleAssignmentId.Value.ToString(),
+                    ["userid"] = submission.User.MoodleId.ToString(),
+                    ["grade"] = grade.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["attemptnumber"] = submission.MoodleAttemptNumber.Value.ToString(),
+                    ["addattempt"] = "0",
+                    ["workflowstate"] = "released",
+                    ["applytoall"] = "0",
+                    ["plugindata[assignfeedbackcomments_editor][text]"] = feedback,
+                    ["plugindata[assignfeedbackcomments_editor][format]"] = "1"
+                };
+
+                var resp = await httpClient.PostAsync(
+                    $"{moodleUrl}/webservice/rest/server.php",
+                    new FormUrlEncodedContent(form)
+                );
+
+                var body = await resp.Content.ReadAsStringAsync();
+                Console.WriteLine($"Moodle WS HTTP={(int)resp.StatusCode} body={body}");
+
+                if (resp.IsSuccessStatusCode && body.Trim() == "null")
                 {
                     submission.MoodleSyncStatus = "Synced";
                     submission.MoodleSyncCreatedAt = DateTime.UtcNow;
-                    Console.WriteLine($"Moodle sync successful for submission {submission.Id}");
+                    submission.MoodleSyncOutput = body;
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
                     submission.MoodleSyncStatus = "Failed";
-                    submission.MoodleSyncOutput = errorContent;
-                    Console.WriteLine($"Moodle sync failed for submission {submission.Id}: {errorContent}");
+                    submission.MoodleSyncOutput = body;
                 }
             }
             catch (Exception ex)

@@ -5,10 +5,22 @@ namespace CodeEvaluator.Application.DTOs
     /// </summary>
     public class TaskTestCaseDto
     {
+        public int Id { get; set; }
+
         /// <summary>
         /// Human-readable name of the test case.
         /// </summary>
         public string Name { get; set; } = default!;
+
+        public string Input { get; set; } = "";
+
+        public string ExpectedOutput { get; set; } = "";
+
+        public bool IsPublic { get; set; }
+
+        public int ExecutionOrder { get; set; }
+
+        public decimal Points { get; set; }
 
         /// <summary>
         /// Path or identifier of the input file used in the sandbox.

@@ -47,6 +47,14 @@ namespace CodeEvaluator.Application.DTOs
         /// </summary>
         public int? MoodleAttemptId { get; set; }
 
-    
+        /// <summary>
+        /// Field to get the correct attempt number from Moodle.
+        /// </summary>
+        public int? MoodleAttemptNumber { get; set; }
+
+        /// <summary>
+        /// Send a full user object so the backend can upsert the student
+        /// </summary>
+        public MoodleUserDto User { get; set; } = new();
     }
 }

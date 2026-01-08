@@ -15,6 +15,7 @@ public class Submission
     public DateTime? EvaluationStartedAt { get; set; }
     public DateTime? EvaluationCompletedAt { get; set; }
     public int? MoodleSubmissionId { get; set; }
+    public int? MoodleAttemptNumber { get; set; }
     public string? MoodleSyncStatus { get; set; }
     public string? MoodleSyncOutput { get; set; }
     public DateTime? MoodleSyncCreatedAt { get; set; }

@@ -105,8 +105,13 @@ const DashboardView = {
 
         return `
             <div class="bg-white rounded-lg shadow">
-                <div class="px-6 py-4 border-b">
-                    <h3 class="text-lg font-semibold">${I18n.t('activeTasks')}</h3>
+                <div class="px-6 py-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-semibold">${I18n.t('activeTasks')}</h3>
+                <button
+                    class="text-sm text-primary hover:underline"
+                    onclick="App.navigateTo('tasks')">
+                    ${I18n.t('viewAll')}
+                </button>
                 </div>
                 <div class="p-6">
                     <div class="space-y-4">

@@ -3,6 +3,7 @@
  * Displays task statistics based on FR-3.2 requirements
  */
 const StatisticsView = {
+    taskId: 0,
     // Mock statistics data - matches backend Submission model
     // Grade is on Bulgarian scale: 2 (Слаб) to 6 (Отличен)
     mockTaskStatistics: {
@@ -11,21 +12,21 @@ const StatisticsView = {
         courseName: 'Структури от данни',
         // Submissions data for calculating statistics
         submissions: [
-            { id: 1, userId: 1, grade: 5.75, submissionTime: '2024-12-03T14:30:00', attemptNumber: 1 },
-            { id: 2, userId: 1, grade: 6.00, submissionTime: '2024-12-03T16:00:00', attemptNumber: 2 },
-            { id: 3, userId: 2, grade: 5.00, submissionTime: '2024-12-03T15:45:00', attemptNumber: 1 },
-            { id: 4, userId: 3, grade: 3.50, submissionTime: '2024-12-03T16:00:00', attemptNumber: 1 },
-            { id: 5, userId: 3, grade: 4.25, submissionTime: '2024-12-03T18:30:00', attemptNumber: 2 },
-            { id: 6, userId: 4, grade: 6.00, submissionTime: '2024-12-04T08:30:00', attemptNumber: 1 },
-            { id: 7, userId: 5, grade: 5.50, submissionTime: '2024-12-03T17:00:00', attemptNumber: 1 },
-            { id: 8, userId: 6, grade: 2.00, submissionTime: '2024-12-04T10:00:00', attemptNumber: 1 },
-            { id: 9, userId: 6, grade: 3.00, submissionTime: '2024-12-04T11:30:00', attemptNumber: 2 },
-            { id: 10, userId: 7, grade: 6.00, submissionTime: '2024-12-04T10:30:00', attemptNumber: 1 },
-            { id: 11, userId: 8, grade: 3.25, submissionTime: '2024-12-04T12:00:00', attemptNumber: 1 },
-            { id: 12, userId: 8, grade: 4.00, submissionTime: '2024-12-04T14:00:00', attemptNumber: 2 },
-            { id: 13, userId: 8, grade: 5.00, submissionTime: '2024-12-04T16:00:00', attemptNumber: 3 },
-            { id: 14, userId: 9, grade: 2.00, submissionTime: '2024-12-04T09:00:00', attemptNumber: 1 },
-            { id: 15, userId: 10, grade: 4.50, submissionTime: '2024-12-04T11:00:00', attemptNumber: 1 }
+            { id: 1, userId: 1, grade: 5.75, submittedAt: '2024-12-03T14:30:00', attemptNumber: 1 },
+            { id: 2, userId: 1, grade: 6.00, submittedAt: '2024-12-03T16:00:00', attemptNumber: 2 },
+            { id: 3, userId: 2, grade: 5.00, submittedAt: '2024-12-03T15:45:00', attemptNumber: 1 },
+            { id: 4, userId: 3, grade: 3.50, submittedAt: '2024-12-03T16:00:00', attemptNumber: 1 },
+            { id: 5, userId: 3, grade: 4.25, submittedAt: '2024-12-03T18:30:00', attemptNumber: 2 },
+            { id: 6, userId: 4, grade: 6.00, submittedAt: '2024-12-04T08:30:00', attemptNumber: 1 },
+            { id: 7, userId: 5, grade: 5.50, submittedAt: '2024-12-03T17:00:00', attemptNumber: 1 },
+            { id: 8, userId: 6, grade: 2.00, submittedAt: '2024-12-04T10:00:00', attemptNumber: 1 },
+            { id: 9, userId: 6, grade: 3.00, submittedAt: '2024-12-04T11:30:00', attemptNumber: 2 },
+            { id: 10, userId: 7, grade: 6.00, submittedAt: '2024-12-04T10:30:00', attemptNumber: 1 },
+            { id: 11, userId: 8, grade: 3.25, submittedAt: '2024-12-04T12:00:00', attemptNumber: 1 },
+            { id: 12, userId: 8, grade: 4.00, submittedAt: '2024-12-04T14:00:00', attemptNumber: 2 },
+            { id: 13, userId: 8, grade: 5.00, submittedAt: '2024-12-04T16:00:00', attemptNumber: 3 },
+            { id: 14, userId: 9, grade: 2.00, submittedAt: '2024-12-04T09:00:00', attemptNumber: 1 },
+            { id: 15, userId: 10, grade: 4.50, submittedAt: '2024-12-04T11:00:00', attemptNumber: 1 }
         ]
     },
 
@@ -34,23 +35,23 @@ const StatisticsView = {
      * @param {Array} submissions - Array of submission objects
      * @returns {Object} - Calculated statistics
      */
-    calculateStatistics(submissions) {
+    calculateStatistics(submissions, maxPoints) {
         if (!submissions || submissions.length === 0) {
             return this.getEmptyStatistics();
         }
 
         // A. General Information
         const totalSubmissions = submissions.length;
-        const uniqueStudents = new Set(submissions.map(s => s.userId)).size;
+        const uniqueStudents = new Set(submissions.map(s => s.studentId)).size;
         const avgAttemptsPerStudent = (totalSubmissions / uniqueStudents).toFixed(2);
 
         // Calculate average time between first and last attempt per student
         const studentAttempts = {};
         submissions.forEach(s => {
-            if (!studentAttempts[s.userId]) {
-                studentAttempts[s.userId] = [];
+            if (!studentAttempts[s.studentId]) {
+                studentAttempts[s.studentId] = [];
             }
-            studentAttempts[s.userId].push(new Date(s.submissionTime));
+            studentAttempts[s.studentId].push(new Date(s.submittedAt));
         });
 
         let totalTimeDiff = 0;
@@ -70,13 +71,13 @@ const StatisticsView = {
 
         // First and last submission
         const sortedByTime = [...submissions].sort(
-            (a, b) => new Date(a.submissionTime) - new Date(b.submissionTime)
+            (a, b) => new Date(a.submittedAt) - new Date(b.submittedAt)
         );
-        const firstSubmission = sortedByTime[0].submissionTime;
-        const lastSubmission = sortedByTime[sortedByTime.length - 1].submissionTime;
+        const firstSubmission = sortedByTime[0].submittedAt;
+        const lastSubmission = sortedByTime[sortedByTime.length - 1].submittedAt;
 
         // B. Grade Distribution (Bulgarian scale: 2-6)
-        const grades = submissions.map(s => s.grade).filter(g => g !== null);
+        const grades = submissions.map(s => (s.score / maxPoints) * 4 + 2).filter(g => g !== null);
 
         // Histogram ranges: 2-3, 3-4, 4-5, 5-6 (Bulgarian grading scale)
         const histogram = {
@@ -95,8 +96,8 @@ const StatisticsView = {
         const minGrade = Math.min(...grades);
         const maxGrade = Math.max(...grades);
 
-        const perfectScorePercent = ((grades.filter(g => g === 6).length / grades.length) * 100).toFixed(1);
-        const failingScorePercent = ((grades.filter(g => g === 2).length / grades.length) * 100).toFixed(1);
+        const perfectScorePercent = ((grades.filter(g => g >= 5.5).length / grades.length) * 100).toFixed(1);
+        const failingScorePercent = ((grades.filter(g => g <= 2.5).length / grades.length) * 100).toFixed(1);
 
         return {
             general: {
@@ -151,8 +152,8 @@ const StatisticsView = {
                 histogram: { '2-3': 0, '3-4': 0, '4-5': 0, '5-6': 0 },
                 avgGrade: 0,
                 medianGrade: 0,
-                minGrade: 2,
-                maxGrade: 6,
+                minGrade: 0,
+                maxGrade: 0,
                 perfectScorePercent: 0,
                 failingScorePercent: 0
             }
@@ -180,9 +181,21 @@ const StatisticsView = {
      * Render the statistics view
      * @returns {Promise<string>} - HTML content
      */
-    async render() {
-        const taskData = this.mockTaskStatistics;
-        const stats = this.calculateStatistics(taskData.submissions);
+    async render() {;
+        if (!this.taskId)
+        {
+            let allTasks = await ApiService.getTasks();
+
+            this.taskId = allTasks.length > 0 ? allTasks[0].id : 0;
+        }
+
+        const [submissions, tasks, task] = await Promise.all([
+            ApiService.getSubmissionsByTaskId(this.taskId),
+            ApiService.getTasks(),
+            ApiService.getTaskById(this.taskId)
+        ]);
+
+        const stats = this.calculateStatistics(submissions, task.maxPoints);
 
         return `
             <div class="space-y-6">
@@ -190,13 +203,10 @@ const StatisticsView = {
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml(taskData.taskTitle)}</h3>
-                            <p class="text-sm text-gray-500">${Utils.escapeHtml(taskData.courseName)}</p>
+                            <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml(task.name)}</h3>
                         </div>
                         <select id="task-selector" class="border rounded-lg px-4 py-2" onchange="StatisticsView.changeTask(this.value)">
-                            <option value="1" selected>${I18n.t('task')} 1: Двоично търсене</option>
-                            <option value="2">${I18n.t('task')} 2: Свързан списък</option>
-                            <option value="3">${I18n.t('task')} 3: Бързо сортиране</option>
+                            ${tasks.map(t => `<option value="${t.id}" ${t.id === this.taskId ? "selected" : ""}>${Utils.escapeHtml(t.name)}</option>`).join('')}
                         </select>
                     </div>
                 </div>
@@ -252,13 +262,12 @@ const StatisticsView = {
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('student')}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('attemptNumber')}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('grade')}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${I18n.t('submitted')}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
-                                ${this.renderRecentSubmissions(taskData.submissions.slice(-5).reverse())}
+                                ${await this.renderRecentSubmissions(submissions.slice(-5).reverse(), task.maxPoints)}
                             </tbody>
                         </table>
                     </div>
@@ -328,36 +337,22 @@ const StatisticsView = {
      * @param {Array} submissions - Submissions array
      * @returns {string} - HTML table rows
      */
-    renderRecentSubmissions(submissions) {
+    async renderRecentSubmissions(submissions, maxPoints) {
         // Map user IDs to names (mock)
-        const userNames = {
-            1: 'Алиса Иванова',
-            2: 'Борис Петров',
-            3: 'Ваня Димитрова',
-            4: 'Георги Стоянов',
-            5: 'Елена Николова',
-            6: 'Филип Георгиев',
-            7: 'Габриела Тодорова',
-            8: 'Христо Маринов',
-            9: 'Ивана Колева',
-            10: 'Красимир Тодоров'
-        };
+        const students = await ApiService.getEnrichedStudents();
 
         return submissions.map(s => `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium">${userNames[s.userId] || `Student ${s.userId}`}</span>
+                    <span class="font-medium">${students.filter(stu => stu.moodleId === s.studentId).length > 0 ? students.filter(stu => stu.moodleId === s.studentId)[0].fullName : ""}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 text-xs bg-gray-100 rounded">#${s.attemptNumber}</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium ${s.grade >= 5 ? 'text-green-600' : s.grade >= 4 ? 'text-blue-600' : s.grade >= 3 ? 'text-orange-600' : 'text-red-600'}">
-                        ${s.grade.toFixed(2)}/6
+                    <span class="font-medium ${(s.score / maxPoints) * 4 + 2 >= 5 ? 'text-green-600' : (s.score / maxPoints) * 4 + 2 >= 4 ? 'text-blue-600' : (s.score / maxPoints) * 4 + 2 >= 3 ? 'text-orange-600' : 'text-red-600'}">
+                        ${((s.score / maxPoints) * 4 + 2).toFixed(2)}/6
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${I18n.formatDateTime(s.submissionTime)}
+                    ${I18n.formatDateTime(s.submittedAt)}
                 </td>
             </tr>
         `).join('');
@@ -367,8 +362,10 @@ const StatisticsView = {
      * Handle task change from dropdown
      * @param {string} taskId - Selected task ID
      */
-    changeTask(taskId) {
+    async changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
-        alert(`${I18n.t('loadingStatisticsFor')} Task #${taskId}\n\n(${I18n.t('mockDataNote')})`);
+        StatisticsView.taskId = parseInt(taskId);
+
+        document.getElementById('content').innerHTML = await StatisticsView.render();
     }
 };

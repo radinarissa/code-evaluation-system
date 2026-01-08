@@ -4,16 +4,19 @@ using CodeEvaluator.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using CodeEvaluator.Application.DTOs;
 
 namespace CodeEvaluator.API.Controllers
 {
     public class AuthController : Controller
     {
         private readonly IMoodleAuthService _moodleAuth;
+        private readonly IUserService _userService;
 
-        public AuthController(IMoodleAuthService moodleAuth)
+        public AuthController(IMoodleAuthService moodleAuth, IUserService userService)
         {
             _moodleAuth = moodleAuth;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -37,9 +40,20 @@ namespace CodeEvaluator.API.Controllers
 
             var userId = await _moodleAuth.GetUserIdAsync(result.Token);
 
+            var backendUser = await _userService.UpsertFromMoodleAsync(new MoodleUserDto
+            {
+                MoodleId = userId,
+                Username = model.Username,
+                Email = "",
+                FirstName = "",
+                LastName = "",
+                Role = "Teacher"
+            });
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, model.Username),
+                new Claim(ClaimTypes.NameIdentifier, backendUser.Id.ToString()),
                 new Claim("MoodleUserId", userId.ToString()),
                 new Claim("MoodleToken", result.Token!)
             };

@@ -4,6 +4,7 @@ using CodeEvaluator.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CodeEvaluator.API.Controllers
 {
@@ -12,10 +13,12 @@ namespace CodeEvaluator.API.Controllers
     public class ApiAuthController : ControllerBase
     {
         private readonly IMoodleAuthService _moodleAuth;
+        private readonly IUserService _userService;
 
-        public ApiAuthController(IMoodleAuthService moodleAuth)
+        public ApiAuthController(IMoodleAuthService moodleAuth, IUserService userService)
         {
             _moodleAuth = moodleAuth;
+            _userService = userService;
         }
 
         /// <summary>
@@ -39,9 +42,20 @@ namespace CodeEvaluator.API.Controllers
 
             var userId = await _moodleAuth.GetUserIdAsync(result.Token!);
 
+            var backendUser = await _userService.UpsertFromMoodleAsync(new MoodleUserDto
+            {
+                MoodleId = userId,
+                Username = request.Username,
+                Email = "",
+                FirstName = request.Username,
+                LastName = "",
+                Role = "Teacher"
+            });
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, request.Username),
+                new Claim(ClaimTypes.NameIdentifier, backendUser.Id.ToString()),
                 new Claim("MoodleUserId", userId.ToString()),
                 new Claim("MoodleToken", result.Token!)
             };
@@ -59,7 +73,7 @@ namespace CodeEvaluator.API.Controllers
                 Success = true,
                 User = new UserDto
                 {
-                    Id = userId,
+                    Id = backendUser.Id,
                     Username = request.Username,
                     FirstName = request.Username, // Moodle doesn't return these by default
                     LastName = "",
@@ -93,12 +107,14 @@ namespace CodeEvaluator.API.Controllers
             }
 
             var username = User.Identity.Name;
-            var userIdClaim = User.FindFirst("MoodleUserId");
-            var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+            // var userIdClaim = User.FindFirst("MoodleUserId");
+            // var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+            var backendIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var backendId = backendIdClaim != null ? int.Parse(backendIdClaim.Value) : 0;
 
             return Ok(new UserDto
             {
-                Id = userId,
+                Id = backendId,
                 Username = username ?? "",
                 FirstName = username ?? "",
                 LastName = "",
