@@ -377,10 +377,10 @@ const StatisticsView = {
      * Handle task change from dropdown
      * @param {string} taskId - Selected task ID
      */
-    changeTask(taskId) {
+    async changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
         this.taskId = taskId;
         console.log(taskId);
-        document.getElementById('content').innerHTML = StatisticsView.render();
+        document.getElementById('content').innerHTML = await StatisticsView.render();
     }
 };
