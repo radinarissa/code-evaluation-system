@@ -185,10 +185,10 @@ const StatisticsView = {
         if (!this.taskId)
         {
             let allTasks = await ApiService.getTasks();
-
+            console.log(allTasks);
             this.taskId = allTasks.length > 0 ? allTasks[0].id : 0;
         }
-        
+
         const [submissions, tasks, task] = await Promise.all([
             ApiService.getSubmissionsByTaskId(this.taskId),
             ApiService.getTasks(),
