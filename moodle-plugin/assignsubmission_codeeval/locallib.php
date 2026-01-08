@@ -29,9 +29,18 @@ class assign_submission_codeeval extends assign_submission_plugin {
         $mform->setType($fieldname, PARAM_INT);
         $mform->addHelpButton($fieldname, 'taskid', 'assignsubmission_codeeval');
 
-        $mform->setDefault($fieldname, (int)$this->get_config('taskid'));
+        //$mform->setDefault($fieldname, (int)$this->get_config('taskid'));
         //freeze === read-only
-        $mform->freeze($fieldname);
+        //$mform->freeze($fieldname);
+        //$taskid = (int)$this->get_config('taskid');
+        //$mform->setDefault($fieldname, $taskid);
+
+        $taskid = (int)$this->get_config('taskid');
+        $mform->setDefault($fieldname, $taskid);
+
+        if ($taskid > 0) {
+            $mform->freeze($fieldname);
+        }
 
 
         // Limits
@@ -72,6 +81,8 @@ class assign_submission_codeeval extends assign_submission_plugin {
 
 
     public function validate_settings(MoodleQuickForm $mform, stdClass $data) {
+        error_log("CODEEVAL validate_settings raw=" . ($data->assignsubmission_codeeval_testcasesjson ?? 'NULL'));
+
         $errors = [];
 
         $time = (int)($data->assignsubmission_codeeval_timelimits ?? 0);
@@ -92,13 +103,36 @@ class assign_submission_codeeval extends assign_submission_plugin {
         }
 
         // Validate testcases JSON
+        $typedtaskid = (int)($data->assignsubmission_codeeval_taskid ?? 0);
+        $isbind = ($typedtaskid > 0);
+
         $jsonraw = trim($data->assignsubmission_codeeval_testcasesjson ?? '');
+
+        // If binding to an existing task, allow empty/default JSON
+        // (because we want to keep backend testcases)
+        if ($isbind) {
+            if ($jsonraw === '' || $this->is_default_or_empty_testcases_json($jsonraw)) {
+                return $errors;
+            }
+        } else {
+            // Creating from Moodle: JSON must be provided and non-empty
+            if ($jsonraw === '') {
+                $errors['assignsubmission_codeeval_testcasesjson'] = 'Test cases JSON is required.';
+                return $errors;
+            }
+        }
+
         $testcases = json_decode($jsonraw, true);
+        if ($testcases === null && json_last_error() !== JSON_ERROR_NONE) {
+            $errors['assignsubmission_codeeval_testcasesjson'] = 'Invalid JSON: ' . json_last_error_msg();
+            return $errors;
+        }
 
         if (!is_array($testcases) || count($testcases) < 1) {
             $errors['assignsubmission_codeeval_testcasesjson'] = 'Test cases JSON must be a non-empty JSON array.';
             return $errors;
         }
+
 
         $i = 1;
         foreach ($testcases as $tc) {
@@ -121,94 +155,141 @@ class assign_submission_codeeval extends assign_submission_plugin {
     /**
      * Save per-assignment settings.
      */
-    // public function save_settings(stdClass $data) {
-    //     $fieldname = 'assignsubmission_codeeval_taskid';
-    //     $taskid = 0;
-
-    //     if (isset($data->$fieldname)) {
-    //         $taskid = (int)$data->$fieldname;
-    //     }
-
-    //     $this->set_config('taskid', $taskid);
-    //     return true;
-    // }
     public function save_settings(stdClass $data) {
         global $USER;
 
-        // Read fields
+        // --- Read & clamp limits ---
         $timelimits = max(1, min(15, (int)($data->assignsubmission_codeeval_timelimits ?? 3)));
-        $memorykb = max(2048, (int)($data->assignsubmission_codeeval_memorylimitkb ?? 262144));
-        $diskkb = max(1, (int)($data->assignsubmission_codeeval_disksizelimitkb ?? 256));
+        $memorykb   = max(2048, (int)($data->assignsubmission_codeeval_memorylimitkb ?? 262144));
+        $diskkb     = max(1, (int)($data->assignsubmission_codeeval_disksizelimitkb ?? 256));
 
-        $jsonraw = trim($data->assignsubmission_codeeval_testcasesjson ?? '');
-        if ($jsonraw === '') {
-            throw new moodle_exception('Missing testcases JSON');
-        }
+        // --- Determine mode ---
+        $typedtaskid = (int)($data->assignsubmission_codeeval_taskid ?? 0);
+        $isbind = ($typedtaskid > 0);
 
-        $testcases = json_decode($jsonraw, true);
-        if (!is_array($testcases)) {
-            throw new moodle_exception('Invalid JSON in testcases field');
-        }
-
-        foreach ($testcases as &$tc) {
-            if (isset($tc['input'])) {
-                $tc['input'] = str_replace("\\r\\n", "\n", $tc['input']);
-                $tc['input'] = str_replace("\\n", "\n", $tc['input']);
-            }
-            if (isset($tc['expectedOutput'])) {
-                $tc['expectedOutput'] = str_replace("\\r\\n", "\n", $tc['expectedOutput']);
-                $tc['expectedOutput'] = str_replace("\\n", "\n", $tc['expectedOutput']);
-            }
-        }
-        unset($tc);
-        
-        // Build backend payload (MoodleTaskUpsertDto)
+        // --- Build base payload (MoodleTaskUpsertDto) ---
         $assign = $this->assignment->get_instance();
-
         $role = is_siteadmin($USER) ? "Admin" : "Teacher";
 
         $payload = [
-        "moodleCourseId" => (int)$this->assignment->get_course()->id,
-        "moodleAssignmentId" => (int)$assign->id,
-        "moodleAssignmentName" => (string)$assign->name,
+            "taskId" => ($isbind ? $typedtaskid : null),
 
-        "teacher" => [
-            "moodleId" => (int)$USER->id,
-            "username" => (string)$USER->username,
-            "email" => (string)$USER->email,
-            "firstName" => (string)$USER->firstname,
-            "lastName" => (string)$USER->lastname,
-            "role" => $role,
-        ],
+            "moodleCourseId" => (int)$this->assignment->get_course()->id,
+            "moodleAssignmentId" => (int)$assign->id,
+            "moodleAssignmentName" => (string)$assign->name,
 
-        "title" => (string)$assign->name,
-        "description" => (string)($assign->intro ?? ''),
-        "maxPoints" => (float)($assign->grade ?? 10),
+            "teacher" => [
+                "moodleId" => (int)$USER->id,
+                "username" => (string)$USER->username,
+                "email" => (string)$USER->email,
+                "firstName" => (string)$USER->firstname,
+                "lastName" => (string)$USER->lastname,
+                "role" => $role,
+            ],
 
-        "timeLimitS" => $timelimits,
-        "memoryLimitKb" => $memorykb,
-        "diskLimitKb" => $diskkb,
-        "stackLimitKb" => null,
+            "title" => (string)$assign->name,
+            "description" => (string)($assign->intro ?? ''),
+            "maxPoints" => (float)($assign->grade ?? 10),
 
-        "testCases" => []
-    ];
+            "timeLimitS" => $timelimits,
+            "memoryLimitKb" => $memorykb,
+            "diskLimitKb" => $diskkb,
+            "stackLimitKb" => null,
+        ];
 
-        $order = 1;
-        foreach ($testcases as $tc) {
-            $payload["testCases"][] = [
-                "name" => (string)($tc["name"] ?? ("Test $order")),
-                "input" => (string)($tc["input"] ?? ""),
-                "expectedOutput" => (string)($tc["expectedOutput"] ?? ""),
-                "isPublic" => (bool)($tc["isPublic"] ?? false),
-                "points" => (float)($tc["points"] ?? 1),
-                "executionOrder" => (int)($tc["executionOrder"] ?? $order),
-            ];
-            $order++;
+        // --- Read JSON from textarea ---
+        $jsonraw = trim($data->assignsubmission_codeeval_testcasesjson ?? '');
+
+        // If binding to an existing task and JSON is empty/default placeholder:
+        //  - DO NOT send testCases (so backend keeps its current tests)
+        //  - But DO persist something into testcasesjson so the textarea doesn't "reset":
+        //      * Prefer fetching backend testcases and saving them locally
+        //      * Fallback: keep existing saved config or store placeholder
+        if ($isbind && ($jsonraw === '' || $this->is_default_or_empty_testcases_json($jsonraw))) {
+
+            // Ensure textarea won't reset to empty
+            $saved = (string)($this->get_config('testcasesjson') ?? '');
+            if (trim($saved) === '') {
+                $saved = json_encode([[
+                    "name" => "Test 1",
+                    "input" => "",
+                    "expectedOutput" => "",
+                    "isPublic" => true,
+                    "points" => 1,
+                    "executionOrder" => 1
+                ]], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+                $this->set_config('testcasesjson', $saved);
+            }
+
+            // Best-effort: try to pull backend testcases and store them locally for display
+            // NOTE: This requires backend GET /api/tasks/{id} to be accessible from Moodle (auth!)
+            list($code, $body) = $this->backend_get_json('/api/tasks/' . $typedtaskid);
+            if ($code >= 200 && $code < 300) {
+                $task = json_decode($body, true);
+                if (is_array($task) && isset($task['testCases']) && is_array($task['testCases']) && count($task['testCases']) > 0) {
+                    $export = [];
+                    foreach ($task['testCases'] as $tc) {
+                        $export[] = [
+                            "name" => (string)($tc["name"] ?? ""),
+                            "input" => (string)($tc["input"] ?? ""),
+                            "expectedOutput" => (string)($tc["expectedOutput"] ?? ""),
+                            "isPublic" => (bool)($tc["isPublic"] ?? false),
+                            "points" => (float)($tc["points"] ?? 1),
+                            "executionOrder" => (int)($tc["executionOrder"] ?? 1),
+                        ];
+                    }
+                    $this->set_config('testcasesjson', json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                }
+            }
+
+            // DO NOT set $payload["testCases"]
+        } else {
+            // Create-mode OR bind-mode with real JSON: parse and send testCases to overwrite backend tests
+            if ($jsonraw === '') {
+                throw new moodle_exception('Missing testcases JSON');
+            }
+
+            $testcases = json_decode($jsonraw, true);
+            if ($testcases === null && json_last_error() !== JSON_ERROR_NONE) {
+                throw new moodle_exception('Invalid JSON: ' . json_last_error_msg());
+            }
+            if (!is_array($testcases) || count($testcases) < 1) {
+                throw new moodle_exception('Test cases JSON must be a non-empty array.');
+            }
+
+            // Normalize newline escapes if teacher pasted "\n" text
+            foreach ($testcases as &$tc) {
+                if (isset($tc['input'])) {
+                    $tc['input'] = str_replace(["\\r\\n", "\\n"], "\n", (string)$tc['input']);
+                }
+                if (isset($tc['expectedOutput'])) {
+                    $tc['expectedOutput'] = str_replace(["\\r\\n", "\\n"], "\n", (string)$tc['expectedOutput']);
+                }
+            }
+            unset($tc);
+
+            $payload["testCases"] = [];
+            $order = 1;
+            foreach ($testcases as $tc) {
+                $payload["testCases"][] = [
+                    "name" => (string)($tc["name"] ?? ("Test $order")),
+                    "input" => (string)($tc["input"] ?? ""),
+                    "expectedOutput" => (string)($tc["expectedOutput"] ?? ""),
+                    "isPublic" => (bool)($tc["isPublic"] ?? false),
+                    "points" => (float)($tc["points"] ?? 1),
+                    "executionOrder" => (int)($tc["executionOrder"] ?? $order),
+                ];
+                $order++;
+            }
+
+            // Persist what teacher typed so it shows next time
+            $this->set_config('testcasesjson', json_encode($testcases, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
 
-        // Call backend
+        // --- Call backend upsert ---
         list($httpcode, $response) = $this->backend_post_json('/api/tasks/moodle/upsert', $payload);
-        error_log("CODEEVAL upsert HTTP=$httpcode response=$response");
+        error_log("CODEEVAL upsert/bind HTTP=$httpcode response=$response");
 
         if ($httpcode < 200 || $httpcode >= 300) {
             throw new moodle_exception('backendgradingfailed', 'assignsubmission_codeeval', '', null,
@@ -216,24 +297,17 @@ class assign_submission_codeeval extends assign_submission_plugin {
         }
 
         $resp = json_decode($response, true);
-        if (!is_array($resp) || !isset($resp["taskId"])) {
-            if (isset($resp["id"])) {
-                $taskid = (int)$resp["id"];
-            } else {
-                throw new moodle_exception("Backend upsert response missing taskId/id");
-            }
-        } else {
-            $taskid = (int)$resp["taskId"];
+        if (!is_array($resp) || (!isset($resp["taskId"]) && !isset($resp["id"]))) {
+            throw new moodle_exception("Backend upsert response missing taskId/id");
         }
 
-        // Save configs
+        $taskid = isset($resp["taskId"]) ? (int)$resp["taskId"] : (int)$resp["id"];
+
+        // --- Save per-assignment configs ---
         $this->set_config('taskid', $taskid);
         $this->set_config('timelimits', $timelimits);
         $this->set_config('memorylimitkb', $memorykb);
         $this->set_config('disksizelimitkb', $diskkb);
-        
-        $normalizedjson = json_encode($testcases, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $this->set_config('testcasesjson', $normalizedjson);
 
         return true;
     }
@@ -454,23 +528,6 @@ class assign_submission_codeeval extends assign_submission_plugin {
         ]);
     }
 
-    /**
-     * Very simple mock grading rule:
-     * - contains 'for' -> 100
-     * - else if contains 'if' -> 80
-     * - else -> 60
-     */
-    // protected function mock_grade_from_code($code): float {
-    //     $lower = core_text::strtolower($code);
-    //     if (strpos($lower, 'for') !== false) {
-    //         return 100.0;
-    //     }
-    //     if (strpos($lower, 'if') !== false) {
-    //         return 80.0;
-    //     }
-    //     return 60.0;
-    // }
-
     protected function backend_post_json(string $path, array $payload): array {
         $base = get_config('assignsubmission_codeeval', 'backend_url');
         if (empty($base)) {
@@ -489,13 +546,13 @@ class assign_submission_codeeval extends assign_submission_plugin {
         $body = $curl->post($url, json_encode($payload), $options);
         $info = $curl->get_info();
         $code = $info['http_code'] ?? 0;
-        $errno = $curl->get_errno();
-        $errmsg = $curl->error;
-        if ($errno) {
-            error_log("CODEEVAL curl errno=$errno err=$errmsg url=$url");
+
+        if ($curl->get_errno()) {
+            error_log("CODEEVAL curl errno=" . $curl->get_errno() . " err=" . $curl->error . " url=$url");
         }
+
         return [$code, $body];
-        }
+    }
     
     //helper to fetch a task JSON
     protected function backend_get_json(string $path): array {
@@ -516,29 +573,25 @@ class assign_submission_codeeval extends assign_submission_plugin {
         return [$code, $body];
     }
 
-    //     protected function moodle_ws_post(array $params): array {
-    //     $base = get_config('assignsubmission_codeeval', 'moodle_ws_url');
-    //     $token = get_config('assignsubmission_codeeval', 'moodle_ws_token');
+    private function is_default_or_empty_testcases_json(string $jsonraw): bool {
+        $decoded = json_decode($jsonraw, true);
+        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+            // If it's invalid JSON, treat it as "not default" so validation will catch it.
+            return false;
+        }
+        if (!is_array($decoded) || count($decoded) < 1) return true;
 
-    //     if (empty($base) || empty($token)) {
-    //         throw new moodle_exception('Missing moodle_ws_url or moodle_ws_token plugin setting');
-    //     }
-
-    //     $url = rtrim($base, '/') . '/webservice/rest/server.php';
-
-    //     $params['wstoken'] = $token;
-    //     $params['moodlewsrestformat'] = 'json';
-
-    //     $curl = new curl();
-    //     $options = [
-    //         'CURLOPT_CONNECTTIMEOUT' => 10,
-    //         'CURLOPT_TIMEOUT' => 60,
-    //     ];
-
-    //     $body = $curl->post($url, $params, $options);
-    //     $info = $curl->get_info();
-    //     $code = $info['http_code'] ?? 0;
-
-    //     return [$code, $body];
-    // }
+        // "Default placeholder" detection: single testcase with empty input/expectedOutput
+        if (count($decoded) === 1 && is_array($decoded[0])) {
+            $tc = $decoded[0];
+            $name = (string)($tc['name'] ?? '');
+            $input = (string)($tc['input'] ?? '');
+            $expected = (string)($tc['expectedOutput'] ?? '');
+            // This matches the placeholder people leave when they didn't intend to overwrite.
+            if (trim($input) === '' && trim($expected) === '' && ($name === 'Test 1' || $name === '')) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
