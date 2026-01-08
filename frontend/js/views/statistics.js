@@ -195,8 +195,6 @@ const StatisticsView = {
             ApiService.getTaskById(this.taskId)
         ]);
 
-        const course = await ApiService.getCourseById(task.courseId);
-
         const stats = this.calculateStatistics(submissions);
 
         return `
@@ -206,7 +204,6 @@ const StatisticsView = {
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml(task.name)}</h3>
-                            <p class="text-sm text-gray-500">${Utils.escapeHtml(course.name)}</p>
                         </div>
                         <select id="task-selector" class="border rounded-lg px-4 py-2" onchange="StatisticsView.changeTask(this.value)">
                             ${tasks.map(t => `<option value="${t.id}">${Utils.escapeHtml(t.name)}</option>`).join('')}
