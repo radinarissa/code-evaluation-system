@@ -185,7 +185,7 @@ const StatisticsView = {
         if (!this.taskId)
         {
             let allTasks = await ApiService.getTasks();
-            console.log(allTasks);
+
             this.taskId = allTasks.length > 0 ? allTasks[0].id : 0;
         }
 
@@ -379,7 +379,7 @@ const StatisticsView = {
      */
     changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
-        alert(`${I18n.t('loadingStatisticsFor')} Task #${taskId}\n\n(${I18n.t('mockDataNote')})`);
         this.taskId = taskId;
+        document.getElementById('content').innerHTML = render();
     }
 };
