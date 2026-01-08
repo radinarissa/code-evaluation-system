@@ -182,8 +182,7 @@ const StatisticsView = {
      */
     async render() {
         const taskData = await Promise.all([
-            ApiService.getSubmissionsByTaskId(0),
-            ApiService.getTaskById(0)
+            ApiService.getSubmissions()
         ]);
 
         const course = await AppService.getCourseById(taskData.task.courseId);
@@ -196,8 +195,8 @@ const StatisticsView = {
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml(taskData.task.title)}</h3>
-                            <p class="text-sm text-gray-500">${Utils.escapeHtml(taskData.course.name)}</p>
+                            <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml()}</h3>
+                            <p class="text-sm text-gray-500">${Utils.escapeHtml()}</p>
                         </div>
                         <select id="task-selector" class="border rounded-lg px-4 py-2" onchange="StatisticsView.changeTask(this.value)">
                             <option value="1" selected>${I18n.t('task')} 1: Двоично търсене</option>
