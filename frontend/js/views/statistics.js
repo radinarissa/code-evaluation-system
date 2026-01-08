@@ -94,7 +94,6 @@ const StatisticsView = {
         const sortedGrades = [...grades].sort((a, b) => a - b);
         const medianGrade = this.calculateMedian(sortedGrades);
         const minGrade = Math.min(...grades);
-        console.log(minGrade);
         const maxGrade = Math.max(...grades);
 
         const perfectScorePercent = ((grades.filter(g => g >= 5.5).length / grades.length) * 100).toFixed(1);
@@ -153,8 +152,8 @@ const StatisticsView = {
                 histogram: { '2-3': 0, '3-4': 0, '4-5': 0, '5-6': 0 },
                 avgGrade: 0,
                 medianGrade: 0,
-                minGrade: 2,
-                maxGrade: 6,
+                minGrade: 0,
+                maxGrade: 0,
                 perfectScorePercent: 0,
                 failingScorePercent: 0
             }
