@@ -182,6 +182,7 @@ const StatisticsView = {
      * @returns {Promise<string>} - HTML content
      */
     async render() {
+        console.log(!this.taskId);
         if (!this.taskId)
         {
             let allTasks = await ApiService.getTasks();
