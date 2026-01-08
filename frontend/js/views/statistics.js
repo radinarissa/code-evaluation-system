@@ -183,7 +183,7 @@ const StatisticsView = {
      */
     async render() {
         if (!this.taskId)
-            this.taskId = await ApiService.getTasks[0].Id;
+            this.taskId = await ApiService.getTasks()[0].Id;
 
         const [submissions, tasks, task] = await Promise.all([
             ApiService.getSubmissionsByTaskId(this.taskId),
