@@ -12,21 +12,21 @@ const StatisticsView = {
         courseName: 'Структури от данни',
         // Submissions data for calculating statistics
         submissions: [
-            { id: 1, userId: 1, grade: 5.75, submissionTime: '2024-12-03T14:30:00', attemptNumber: 1 },
-            { id: 2, userId: 1, grade: 6.00, submissionTime: '2024-12-03T16:00:00', attemptNumber: 2 },
-            { id: 3, userId: 2, grade: 5.00, submissionTime: '2024-12-03T15:45:00', attemptNumber: 1 },
-            { id: 4, userId: 3, grade: 3.50, submissionTime: '2024-12-03T16:00:00', attemptNumber: 1 },
-            { id: 5, userId: 3, grade: 4.25, submissionTime: '2024-12-03T18:30:00', attemptNumber: 2 },
-            { id: 6, userId: 4, grade: 6.00, submissionTime: '2024-12-04T08:30:00', attemptNumber: 1 },
-            { id: 7, userId: 5, grade: 5.50, submissionTime: '2024-12-03T17:00:00', attemptNumber: 1 },
-            { id: 8, userId: 6, grade: 2.00, submissionTime: '2024-12-04T10:00:00', attemptNumber: 1 },
-            { id: 9, userId: 6, grade: 3.00, submissionTime: '2024-12-04T11:30:00', attemptNumber: 2 },
-            { id: 10, userId: 7, grade: 6.00, submissionTime: '2024-12-04T10:30:00', attemptNumber: 1 },
-            { id: 11, userId: 8, grade: 3.25, submissionTime: '2024-12-04T12:00:00', attemptNumber: 1 },
-            { id: 12, userId: 8, grade: 4.00, submissionTime: '2024-12-04T14:00:00', attemptNumber: 2 },
-            { id: 13, userId: 8, grade: 5.00, submissionTime: '2024-12-04T16:00:00', attemptNumber: 3 },
-            { id: 14, userId: 9, grade: 2.00, submissionTime: '2024-12-04T09:00:00', attemptNumber: 1 },
-            { id: 15, userId: 10, grade: 4.50, submissionTime: '2024-12-04T11:00:00', attemptNumber: 1 }
+            { id: 1, userId: 1, grade: 5.75, submittedAt: '2024-12-03T14:30:00', attemptNumber: 1 },
+            { id: 2, userId: 1, grade: 6.00, submittedAt: '2024-12-03T16:00:00', attemptNumber: 2 },
+            { id: 3, userId: 2, grade: 5.00, submittedAt: '2024-12-03T15:45:00', attemptNumber: 1 },
+            { id: 4, userId: 3, grade: 3.50, submittedAt: '2024-12-03T16:00:00', attemptNumber: 1 },
+            { id: 5, userId: 3, grade: 4.25, submittedAt: '2024-12-03T18:30:00', attemptNumber: 2 },
+            { id: 6, userId: 4, grade: 6.00, submittedAt: '2024-12-04T08:30:00', attemptNumber: 1 },
+            { id: 7, userId: 5, grade: 5.50, submittedAt: '2024-12-03T17:00:00', attemptNumber: 1 },
+            { id: 8, userId: 6, grade: 2.00, submittedAt: '2024-12-04T10:00:00', attemptNumber: 1 },
+            { id: 9, userId: 6, grade: 3.00, submittedAt: '2024-12-04T11:30:00', attemptNumber: 2 },
+            { id: 10, userId: 7, grade: 6.00, submittedAt: '2024-12-04T10:30:00', attemptNumber: 1 },
+            { id: 11, userId: 8, grade: 3.25, submittedAt: '2024-12-04T12:00:00', attemptNumber: 1 },
+            { id: 12, userId: 8, grade: 4.00, submittedAt: '2024-12-04T14:00:00', attemptNumber: 2 },
+            { id: 13, userId: 8, grade: 5.00, submittedAt: '2024-12-04T16:00:00', attemptNumber: 3 },
+            { id: 14, userId: 9, grade: 2.00, submittedAt: '2024-12-04T09:00:00', attemptNumber: 1 },
+            { id: 15, userId: 10, grade: 4.50, submittedAt: '2024-12-04T11:00:00', attemptNumber: 1 }
         ]
     },
 
@@ -35,23 +35,23 @@ const StatisticsView = {
      * @param {Array} submissions - Array of submission objects
      * @returns {Object} - Calculated statistics
      */
-    calculateStatistics(submissions) {
+    calculateStatistics(submissions, maxPoints) {
         if (!submissions || submissions.length === 0) {
             return this.getEmptyStatistics();
         }
 
         // A. General Information
         const totalSubmissions = submissions.length;
-        const uniqueStudents = new Set(submissions.map(s => s.userId)).size;
+        const uniqueStudents = new Set(submissions.map(s => s.studentId)).size;
         const avgAttemptsPerStudent = (totalSubmissions / uniqueStudents).toFixed(2);
 
         // Calculate average time between first and last attempt per student
         const studentAttempts = {};
         submissions.forEach(s => {
-            if (!studentAttempts[s.userId]) {
-                studentAttempts[s.userId] = [];
+            if (!studentAttempts[s.studentId]) {
+                studentAttempts[s.studentId] = [];
             }
-            studentAttempts[s.userId].push(new Date(s.submissionTime));
+            studentAttempts[s.studentId].push(new Date(s.submittedAt));
         });
 
         let totalTimeDiff = 0;
@@ -71,13 +71,13 @@ const StatisticsView = {
 
         // First and last submission
         const sortedByTime = [...submissions].sort(
-            (a, b) => new Date(a.submissionTime) - new Date(b.submissionTime)
+            (a, b) => new Date(a.submittedAt) - new Date(b.submittedAt)
         );
-        const firstSubmission = sortedByTime[0].submissionTime;
-        const lastSubmission = sortedByTime[sortedByTime.length - 1].submissionTime;
+        const firstSubmission = sortedByTime[0].submittedAt;
+        const lastSubmission = sortedByTime[sortedByTime.length - 1].submittedAt;
 
         // B. Grade Distribution (Bulgarian scale: 2-6)
-        const grades = submissions.map(s => s.grade).filter(g => g !== null);
+        const grades = submissions.map(s => (s.score / maxPoints) * 4 + 2).filter(g => g !== null);
 
         // Histogram ranges: 2-3, 3-4, 4-5, 5-6 (Bulgarian grading scale)
         const histogram = {
@@ -195,7 +195,7 @@ const StatisticsView = {
             ApiService.getTaskById(this.taskId)
         ]);
 
-        const stats = this.calculateStatistics(submissions);
+        const stats = this.calculateStatistics(submissions, task.maxPoints);
 
         return `
             <div class="space-y-6">
@@ -356,7 +356,7 @@ const StatisticsView = {
         return submissions.map(s => `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium">${userNames[s.userId] || `Student ${s.userId}`}</span>
+                    <span class="font-medium">${userNames[s.studentId] || `Student ${s.studentId}`}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 py-1 text-xs bg-gray-100 rounded">#${s.attemptNumber}</span>
@@ -367,7 +367,7 @@ const StatisticsView = {
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${I18n.formatDateTime(s.submissionTime)}
+                    ${I18n.formatDateTime(s.submittedAt)}
                 </td>
             </tr>
         `).join('');
