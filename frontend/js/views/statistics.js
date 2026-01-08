@@ -208,7 +208,7 @@ const StatisticsView = {
                             <h3 class="text-lg font-semibold">${I18n.t('statisticsFor')}: ${Utils.escapeHtml(task.name)}</h3>
                         </div>
                         <select id="task-selector" class="border rounded-lg px-4 py-2" onchange="StatisticsView.changeTask(this.value)">
-                            ${tasks.map(t => `<option value="${t.id}" ${t.id === this.taskId ? "selected" : ""}>${Utils.escapeHtml(t.name)}</option>`).join('')}
+                            ${tasks.map(t => `<option value="${t.id}" ${console.log(t.id === this.taskId)}>${Utils.escapeHtml(t.name)}</option>`).join('')}
                         </select>
                     </div>
                 </div>
