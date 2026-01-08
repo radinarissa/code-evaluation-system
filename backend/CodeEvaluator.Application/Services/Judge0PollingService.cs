@@ -13,6 +13,8 @@ using CodeEvaluator.Judge0.Client;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text;
+using CodeEvaluator.Domain.Enums;
+
 
 namespace CodeEvaluator.Application.Services
 {
@@ -65,7 +67,44 @@ namespace CodeEvaluator.Application.Services
 
                         await db.Entry(testResult).Reference(tr => tr.TestCase).LoadAsync();
 
-                        testResult.Status = DetermineTestStatus(res);
+                        var stdout = FromBase64(res.Stdout);
+                        var stderr = FromBase64(res.Stderr);
+                        var compile = FromBase64(res.CompileOutput);
+
+                        var verdict = MapJudge0Status(res.Status?.Id);
+
+                        testResult.Output = stdout;
+
+                        if (verdict == EvaluationVerdict.CompilationError)
+                        {
+                            testResult.Status = EvaluationVerdict.CompilationError.ToString();
+                            testResult.ErrorMessage = compile ?? "Compilation error";
+                        }
+                        else if (verdict == EvaluationVerdict.Timeout)
+                        {
+                            testResult.Status = EvaluationVerdict.Timeout.ToString();
+                            testResult.ErrorMessage = "Time limit exceeded";
+                        }
+                        else if (verdict == EvaluationVerdict.RuntimeError)
+                        {
+                            testResult.Status = EvaluationVerdict.RuntimeError.ToString();
+                            testResult.ErrorMessage = stderr ?? "Runtime error";
+                        }
+                        else
+                        {
+                            var expected = testResult.TestCase.ExpectedOutput;
+
+                            if (Normalize(stdout) == Normalize(expected))
+                            {
+                                testResult.Status = EvaluationVerdict.Accepted.ToString();
+                                testResult.ErrorMessage = null;
+                            }
+                            else
+                            {
+                                testResult.Status = EvaluationVerdict.WrongAnswer.ToString();
+                                testResult.ErrorMessage = $"Expected: {expected}";
+                            }
+                        }
 
                         if (res.Time != null)
                         {
@@ -75,11 +114,8 @@ namespace CodeEvaluator.Application.Services
                         testResult.DiskUsedMb = res.FileSize / 1024m;
                         // testResult.Output = res.Stdout;
                         // testResult.ErrorMessage = res.Stderr;
-                        var stdout = FromBase64(res.Stdout);
-                        var stderr = FromBase64(res.Stderr);
-                        var compile = FromBase64(res.CompileOutput);
-                        testResult.Output = stdout;
-                        testResult.ErrorMessage = !string.IsNullOrWhiteSpace(stderr) ? stderr : !string.IsNullOrWhiteSpace(compile) ? compile : null;
+                        
+                        
                         testResult.Judge0Token = res.Token;
 
                         Console.WriteLine("updated test result for token: " + res.Token);
@@ -109,7 +145,17 @@ namespace CodeEvaluator.Application.Services
 
                             string feedback = GenerateFeedback(allTestResults, passedTests, totalTests);
 
-                            testResult.Submission.Status = "Completed";
+                            if (allTestResults.All(tr => tr.Status == "Accepted"))
+                                testResult.Submission.Status = "Accepted";
+                            else if (allTestResults.Any(tr => tr.Status == "CompilationError"))
+                                testResult.Submission.Status = "CompilationError";
+                            else if (allTestResults.Any(tr => tr.Status == "Timeout"))
+                                testResult.Submission.Status = "Timeout";
+                            else if (allTestResults.Any(tr => tr.Status == "RuntimeError"))
+                                testResult.Submission.Status = "RuntimeError";
+                            else
+                                testResult.Submission.Status = "WrongAnswer";
+
                             testResult.Submission.EvaluationCompletedAt= DateTime.UtcNow;
                             testResult.Submission.FinalGrade = finalGrade;
                             testResult.Submission.Feedback = feedback;
@@ -130,27 +176,7 @@ namespace CodeEvaluator.Application.Services
             }
         }
 
-        private string DetermineTestStatus(Judge0ResultDto judge0Result)
-        {
-            switch (judge0Result.Status.Id)
-            {
-                case 1: return "In Queue"; 
-                case 2: return "Processing";
-                case 3: return "Accepted";
-                case 4: return "Wrong Answer";
-                case 5: return "Time Limit Exceeded";
-                case 6: return "Compilation Error";
-                case 7: return "Runtime error - segfault, invalid memory access";
-                case 8: return "Runtime error - Output exceeded size limit";
-                case 9: return "Runtime error - Floating-point error (divide by zero, overflow)";
-                case 11: return "Runtime error - non zero exit code";
-                case 12: return "Runtime error";
-                case 13: return "Judge0 Internal Failure";
-                case 14: return "Binary format invalid/wrong architecture";
-
-            }
-           return "Unknown";
-        }
+      
 
         private string GenerateFeedback(List<TestResult> testResults, int passedTests, int totalTests)
         {
@@ -169,14 +195,13 @@ namespace CodeEvaluator.Application.Services
                 string testName = testResult.TestCase.Name;
                 string message = testResult.Status switch
                 {
-                    "Compilation Error" => $"Компилационна грешка: {testResult.ErrorMessage}",
-                    "Time Limit Exceeded" => $"Програмата не преминава тестът \"{testName}\" за достатъчно кратко време.",
-                    "Runtime error - segfault, invalid memory access" => $"Програмата не преминава тестът \"{testName}\" поради изчерпване на паметта. Използвана памет: {testResult.MemoryUsage} KB.",
-                    "Runtime error - Output exceeded size limit" => $"Програмата не преминава тестът \"{testName}\" поради изчерпване на позволеното дисково пространство. Използвано: {testResult.DiskUsedMb} MB.",
-                    "Runtime Error" => $"Runtime грешка в тест \"{testName}\": {testResult.ErrorMessage}",
-                    "Wrong Answer" => $"Неуспешно изпълнение на тест \"{testName}\" - резултатът се различава от очакваното.",
+                    "CompilationError" => $"Компилационна грешка: {testResult.ErrorMessage}",
+                    "Timeout" => $"Програмата не преминава тестът \"{testName}\" за достатъчно кратко време.",
+                    "RuntimeError" => $"Runtime грешка в тест \"{testName}\": {testResult.ErrorMessage}",
+                    "WrongAnswer" => $"Неуспешно изпълнение на тест \"{testName}\" - резултатът се различава от очакваното.",
                     _ => $"Грешка в тест \"{testName}\": {testResult.Status}"
                 };
+
                 feedbackLines.Add(message);
             }
 
@@ -319,5 +344,32 @@ namespace CodeEvaluator.Application.Services
             try { return Encoding.UTF8.GetString(Convert.FromBase64String(s)); }
             catch { return s; }
         }
+        private static string Normalize(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return "";
+            return s.Replace("\r\n", "\n").TrimEnd();
+        }
+
+        private static EvaluationVerdict MapJudge0Status(int? statusId)
+        {
+            return statusId switch
+            {
+                5 => EvaluationVerdict.Timeout,
+                6 => EvaluationVerdict.CompilationError,
+
+                // sve runtime greške tretiramo kao RuntimeError
+                7 => EvaluationVerdict.RuntimeError,
+                8 => EvaluationVerdict.RuntimeError,
+                9 => EvaluationVerdict.RuntimeError,
+                11 => EvaluationVerdict.RuntimeError,
+                12 => EvaluationVerdict.RuntimeError,
+                13 => EvaluationVerdict.RuntimeError,
+                14 => EvaluationVerdict.RuntimeError,
+
+                // sve ostalo: program je "ran successfully" → dalje proveravamo output
+                _ => EvaluationVerdict.Accepted
+            };
+        }
+
     }
 }

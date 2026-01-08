@@ -1,33 +1,125 @@
-# Setup Guide
 
-This guide covers how to set up the Code Evaluation System on **macOS** and **Windows**.
-
----
+# Code-evaluation-system
 
 ## Prerequisites
 
-| Component | macOS | Windows |
-|-----------|-------|---------|
-| Package Manager | Homebrew | - |
-| PostgreSQL | `brew install postgresql@15` | Download installer |
-| .NET 8 SDK | `brew install dotnet@8` | Download installer |
-| Node.js | `brew install node` | Download installer |
-| Web Browser | Any | Any |
+- Package Manager
+- PostgreSQL
+- .NET 8 SDK
+- Node.js
+- Web Browser
 
----
 
-## 1. Database Setup
+
+## Table of Contents
+  - [Judge0](#judge0setup)
+  - [Postman](#postman)
+  - [DataBase Setup](#database-setup)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Quick Start](#quick-start)
+  - [Configuration](#configuration)
+  - [Troubleshooting](#troubleshooting)
+  - [Project Structure](#project-structure)
+  - [IDE Recommendations](#ide-recommendations)
+
+
+## Judge0setup
+<details>
+<summary><strong>Windows</strong></summary>
+<pre>
+в windows търсачката -> turn windows features on or off  
+чекваме hyper-v  
+(ако липсва като опция:  
+pushd "%~dp0"  
+dir /b %SystemRoot%\servicing\Packages*Hyper-V*.mum >hyper-v.txt  
+for /f %%i in ('findstr /i . hyper-v.txt 2^>nul') do dism /online /add-package:"%SystemRoot%\servicing\Packages%%i"  
+del hyper-v.txt  
+Dism /online /enable-feature /featurename:Microsoft-Hyper-V-All /LimitAccess /ALL  
+pause  
+(в notepad и после на .bat file)  
+
+Даваме рестарт на системата.  
+
+Отваряме Hyper-V Manager и в ляво виждаме машината си.  
+Right click - new Virtual Machine  
+Specify Generation - first generation  
+Assign memory - 4096 (би трябвало да стига)  
+Configure networking - default switch  
+Connect virtual hard disk - 40gb  
+Installation options - Install an operating system from bootable cd/dvd-rom чек и Image file(iso) чек.
+</pre>
+Теглим https://ubuntu.com/download/desktop и го избираме.
+<pre>
+Finish.  
+
+Double click за да пуснем vm-a и enter -> try or install ubuntu.  
+В ubuntu install wizard-a само next, няма нужда да променяме нищо и си правим админ акаунта.  
+Изчакваме инсталацията и рестарт когато е готово(може да излязат грешки в конзолата, но не е проблем за момента).  
+
+Пускаме отново vm-a и би трябвало вече да сме с инсталирано ubuntu 24.04  
+
+
+Отваряме си терминал и започваме:  
+
+sudo nano /etc/default/grub  
+в кавичките на GRUB_CMDLINE_LINUX слагаме systemd.unified_cgroup_hierarchy=0  
+ctrl + x > y > enter за да запазим промените  
+sudo update-grub  
+sudo reboot  
+
+След рестарта отново отваряме терминал и продължаваме:  
+
+sudo apt remove docker docker-engine docker.io containerd runc  
+sudo apt update  
+sudo apt install ca-certificates curl gnupg  
+sudo install -m 0755 -d /etc/apt/keyrings  
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg  
+sudo chmod a+r /etc/apt/keyrings/docker.gpg  
+echo \ "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \ 
+  https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" \ 
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null  
+sudo apt update  
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin  
+sudo systemctl enable --now docker  
+sudo usermod -aG docker $USER  
+newgrp docker  
+Ако ни поиска рестарт/ъпдейт се съгласяваме и продължаваме със стъпките след това.  
+Можем да тестваме дали за момента нещата са наред с docker run  hello-world и docker compose version.  
+
+Продължаваме:  
+cd /  
+ip a  
+Търсим inet при eth0 и си записваме ip-то някъде, което ще ни трябва в бъдеще. (това което е последвано от /20)   
+
+Продължаваме:  
+sudo mkdir judge0  
+cd judge0  
+sudo wget https://github.com/judge0/judge0/releases/download/v1.13.1/judge0-v1.13.1.zip  
+sudo unzip judge0-v1.13.1.zip  
+cd judge0-v1.13.1  
+sudo nano judge0.conf  
+Търсим REDIS_PASSWORD и POSTGRES_PASSWORD и им даваме някакви стойности, няма значение какви.  
+ctrl+x > y > enter  
+docker compose up -d db redis (изчакваме да приключи)  
+docker compose up -d (изчакваме да приключи)  
+Ако забие/трябва да рестартираме тук:  
+cd /judge0  
+cd judge0-v1.13.1  
+И отновно рънваме docker compose up -d db redis или docker compose up -d, според това до къде сме стигнали.</pre>
+
+Когато приключи би трябвало да сме готови.  
+Във vm-а judge0 e на http://localhost:2358  
+В windows машинати е на [ip-то което си запазихме някъде преди малко]:2358  
+Простичък тест е да напраим crul http://localhost:2358/languages или [ip-то]:2358/languages в терминал.  
+</details>
+
+## Postman
+Информация за най-основните [API calls в judge0](https://bobber-1e394336-9141436.postman.co/workspace/9ffb0b89-7422-4417-ab67-3dcfa60c6089)
+
+## Database Setup
 
 ### Install PostgreSQL
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-brew install postgresql@15
-brew services start postgresql@15
-```
-</details>
 
 <details>
 <summary><strong>Windows</strong></summary>
@@ -41,23 +133,6 @@ brew services start postgresql@15
 
 ### Create Database and User
 
-<details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-# Connect to PostgreSQL
-psql -d postgres
-
-# Create user with password
-CREATE USER postgres WITH SUPERUSER PASSWORD 'radi';
-
-# Create database
-CREATE DATABASE codeevaluator OWNER postgres;
-
-# Exit
-\q
-```
-</details>
 
 <details>
 <summary><strong>Windows</strong></summary>
@@ -83,13 +158,7 @@ Or use **pgAdmin** (installed with PostgreSQL):
 
 ### Verify Connection
 
-<details>
-<summary><strong>macOS</strong></summary>
 
-```bash
-PGPASSWORD=radi psql -h localhost -p 5432 -U postgres -d codeevaluator -c "\dt"
-```
-</details>
 
 <details>
 <summary><strong>Windows (PowerShell)</strong></summary>
@@ -103,23 +172,11 @@ Or use **pgAdmin** to connect and verify.
 
 ---
 
-## 2. Backend Setup
+## Backend Setup
 
 ### Install .NET 8 SDK
 
-<details>
-<summary><strong>macOS</strong></summary>
 
-```bash
-brew install dotnet@8
-```
-
-Add to PATH (optional):
-```bash
-echo 'export PATH="/opt/homebrew/opt/dotnet@8/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-```
-</details>
 
 <details>
 <summary><strong>Windows</strong></summary>
@@ -137,15 +194,6 @@ dotnet --version
 ### Restore Dependencies
 
 <details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-cd backend
-dotnet restore
-```
-</details>
-
-<details>
 <summary><strong>Windows (PowerShell)</strong></summary>
 
 ```powershell
@@ -155,14 +203,6 @@ dotnet restore
 </details>
 
 ### Install EF Core Tools
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-dotnet tool install --global dotnet-ef --version 8.0.0
-```
-</details>
 
 <details>
 <summary><strong>Windows (PowerShell)</strong></summary>
@@ -175,15 +215,6 @@ If you get "command not found" after installing, restart PowerShell.
 </details>
 
 ### Run Database Migrations
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-cd backend
-dotnet ef database update --project CodeEvaluator.Infrastructure --startup-project CodeEvaluator.API
-```
-</details>
 
 <details>
 <summary><strong>Windows (PowerShell)</strong></summary>
@@ -213,15 +244,6 @@ Expected tables after migration:
 ### Run Backend
 
 <details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-cd backend/CodeEvaluator.API
-dotnet run
-```
-</details>
-
-<details>
 <summary><strong>Windows (PowerShell)</strong></summary>
 
 ```powershell
@@ -236,19 +258,13 @@ Backend will be available at:
 
 ---
 
-## 3. Frontend Setup
+## Frontend Setup
+
+Setup
 
 The frontend uses vanilla HTML/JS with Tailwind CSS (via CDN). No build step required.
 
 ### Install Node.js (Recommended)
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-brew install node
-```
-</details>
 
 <details>
 <summary><strong>Windows</strong></summary>
@@ -266,22 +282,6 @@ node --version
 ### Run Frontend with Local Server (Recommended)
 
 Running on localhost is recommended over opening as a file, especially when connecting to the API.
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-cd frontend
-npx serve
-```
-
-Or with a specific port:
-```bash
-npx serve -p 3000
-```
-
-Frontend will be available at http://localhost:3000
-</details>
 
 <details>
 <summary><strong>Windows (PowerShell)</strong></summary>
@@ -304,16 +304,6 @@ Frontend will be available at http://localhost:3000
 If you don't have Node.js, you can open the HTML file directly (some features may be limited):
 
 <details>
-<summary><strong>macOS</strong></summary>
-
-```bash
-open frontend/index.html
-```
-
-Or double-click `frontend/index.html` in Finder.
-</details>
-
-<details>
 <summary><strong>Windows</strong></summary>
 
 ```powershell
@@ -323,17 +313,16 @@ start frontend\index.html
 Or double-click `frontend\index.html` in File Explorer.
 </details>
 
-### Switching to Real API
+### Switching between mock data and real API
 
-The frontend currently uses mock data. To switch to real API when ready:
-
+The frontend can use either mock data or the API, to switch:
 1. Open `frontend/js/config.js`
-2. Change `USE_MOCK_DATA: true` to `USE_MOCK_DATA: false`
+2. Change `USE_MOCK_DATA: true` or `USE_MOCK_DATA: false`
 3. Ensure backend is running at http://localhost:5218
 
 ---
 
-## 4. Configuration
+## Configuration
 
 ### Database Connection
 
@@ -358,30 +347,6 @@ API_BASE_URL: 'http://localhost:5218/api'
 ---
 
 ## Quick Start
-
-### macOS
-
-```bash
-# 1. Start PostgreSQL
-brew services start postgresql@15
-
-# 2. Create database (first time only)
-psql -d postgres -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'radi';"
-psql -d postgres -c "CREATE DATABASE codeevaluator OWNER postgres;"
-
-# 3. Run migrations (first time only)
-cd backend
-dotnet restore
-dotnet ef database update --project CodeEvaluator.Infrastructure --startup-project CodeEvaluator.API
-
-# 4. Start backend
-cd CodeEvaluator.API
-dotnet run &
-
-# 5. Start frontend (in new terminal)
-cd ../frontend
-npx serve -p 3000
-```
 
 ### Windows (PowerShell)
 
@@ -411,15 +376,6 @@ npx serve -p 3000
 ### "dotnet: command not found"
 
 <details>
-<summary><strong>macOS</strong></summary>
-
-Use the full path or add to PATH:
-```bash
-/opt/homebrew/opt/dotnet@8/bin/dotnet --version
-```
-</details>
-
-<details>
 <summary><strong>Windows</strong></summary>
 
 Restart PowerShell after installing .NET SDK. If still not found, add to PATH manually:
@@ -429,15 +385,6 @@ Restart PowerShell after installing .NET SDK. If still not found, add to PATH ma
 </details>
 
 ### "dotnet-ef: command not found"
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-Add tools to PATH:
-```bash
-export PATH="$PATH:$HOME/.dotnet/tools"
-```
-</details>
 
 <details>
 <summary><strong>Windows</strong></summary>
@@ -451,16 +398,6 @@ $env:Path += ";$env:USERPROFILE\.dotnet\tools"
 ### "connection refused" on database
 
 <details>
-<summary><strong>macOS</strong></summary>
-
-Ensure PostgreSQL is running:
-```bash
-brew services list | grep postgres
-brew services start postgresql@15
-```
-</details>
-
-<details>
 <summary><strong>Windows</strong></summary>
 
 1. Open Services (Win + R, type `services.msc`)
@@ -469,21 +406,9 @@ brew services start postgresql@15
 4. If stopped, right-click → Start
 </details>
 
-### "role postgres does not exist" (macOS only)
-
-Create the postgres user:
-```bash
-psql -d postgres -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'radi';"
-```
-
 ### "database codeevaluator does not exist"
 
 Create the database:
-
-**macOS:**
-```bash
-psql -d postgres -c "CREATE DATABASE codeevaluator OWNER postgres;"
-```
 
 **Windows (psql):**
 ```sql
@@ -555,7 +480,6 @@ code-evaluation-system/
 
 | Platform | Recommended IDE |
 |----------|-----------------|
-| macOS | VS Code + C# Dev Kit, or JetBrains Rider |
 | Windows | Visual Studio 2022, VS Code, or JetBrains Rider |
 
 For VS Code, install these extensions:
