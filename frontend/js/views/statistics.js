@@ -268,7 +268,7 @@ const StatisticsView = {
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
-                                ${this.renderRecentSubmissions(submissions.slice(-5).reverse(), task.maxPoints)}
+                                ${await this.renderRecentSubmissions(submissions.slice(-5).reverse(), task.maxPoints)}
                             </tbody>
                         </table>
                     </div>
