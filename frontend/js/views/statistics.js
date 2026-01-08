@@ -380,6 +380,7 @@ const StatisticsView = {
     changeTask(taskId) {
         // In real implementation, this would fetch statistics for the selected task
         this.taskId = taskId;
-        document.getElementById('content').innerHTML = render();
+        console.log(taskId);
+        document.getElementById('content').innerHTML = StatisticsView.render();
     }
 };
