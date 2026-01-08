@@ -181,7 +181,7 @@ const StatisticsView = {
      * @returns {Promise<string>} - HTML content
      */
     async render() {
-        const taskData = await Promise.all([
+        const [submissions] = await Promise.all([
             ApiService.getSubmissions()
         ]);
 
