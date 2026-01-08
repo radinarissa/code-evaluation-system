@@ -200,11 +200,6 @@ class assign_submission_codeeval extends assign_submission_plugin {
         // --- Read JSON from textarea ---
         $jsonraw = trim($data->assignsubmission_codeeval_testcasesjson ?? '');
 
-        // If binding to an existing task and JSON is empty/default placeholder:
-        //  - DO NOT send testCases (so backend keeps its current tests)
-        //  - But DO persist something into testcasesjson so the textarea doesn't "reset":
-        //      * Prefer fetching backend testcases and saving them locally
-        //      * Fallback: keep existing saved config or store placeholder
         if ($isbind && ($jsonraw === '' || $this->is_default_or_empty_testcases_json($jsonraw))) {
 
             // Ensure textarea won't reset to empty
@@ -222,8 +217,6 @@ class assign_submission_codeeval extends assign_submission_plugin {
                 $this->set_config('testcasesjson', $saved);
             }
 
-            // Best-effort: try to pull backend testcases and store them locally for display
-            // NOTE: This requires backend GET /api/tasks/{id} to be accessible from Moodle (auth!)
             list($code, $body) = $this->backend_get_json('/api/tasks/' . $typedtaskid);
             if ($code >= 200 && $code < 300) {
                 $task = json_decode($body, true);
@@ -243,9 +236,8 @@ class assign_submission_codeeval extends assign_submission_plugin {
                 }
             }
 
-            // DO NOT set $payload["testCases"]
         } else {
-            // Create-mode OR bind-mode with real JSON: parse and send testCases to overwrite backend tests
+            // parse and send testCases to overwrite backend tests
             if ($jsonraw === '') {
                 throw new moodle_exception('Missing testcases JSON');
             }
@@ -283,11 +275,10 @@ class assign_submission_codeeval extends assign_submission_plugin {
                 $order++;
             }
 
-            // Persist what teacher typed so it shows next time
             $this->set_config('testcasesjson', json_encode($testcases, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
 
-        // --- Call backend upsert ---
+        //Call backend upsert
         list($httpcode, $response) = $this->backend_post_json('/api/tasks/moodle/upsert', $payload);
         error_log("CODEEVAL upsert/bind HTTP=$httpcode response=$response");
 
@@ -303,7 +294,6 @@ class assign_submission_codeeval extends assign_submission_plugin {
 
         $taskid = isset($resp["taskId"]) ? (int)$resp["taskId"] : (int)$resp["id"];
 
-        // --- Save per-assignment configs ---
         $this->set_config('taskid', $taskid);
         $this->set_config('timelimits', $timelimits);
         $this->set_config('memorylimitkb', $memorykb);
