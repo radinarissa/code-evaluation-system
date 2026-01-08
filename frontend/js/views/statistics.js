@@ -268,7 +268,7 @@ const StatisticsView = {
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
-                                ${this.renderRecentSubmissions(submissions.slice(-5).reverse())}
+                                ${this.renderRecentSubmissions(submissions.slice(-5).reverse(), task.maxPoints)}
                             </tbody>
                         </table>
                     </div>
@@ -338,32 +338,18 @@ const StatisticsView = {
      * @param {Array} submissions - Submissions array
      * @returns {string} - HTML table rows
      */
-    renderRecentSubmissions(submissions) {
+    renderRecentSubmissions(submissions, maxPoints) {
         // Map user IDs to names (mock)
-        const userNames = {
-            1: 'Алиса Иванова',
-            2: 'Борис Петров',
-            3: 'Ваня Димитрова',
-            4: 'Георги Стоянов',
-            5: 'Елена Николова',
-            6: 'Филип Георгиев',
-            7: 'Габриела Тодорова',
-            8: 'Христо Маринов',
-            9: 'Ивана Колева',
-            10: 'Красимир Тодоров'
-        };
+        const students = await ApiService.getEnrichedStudents();
 
         return submissions.map(s => `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium">${userNames[s.studentId] || `Student ${s.studentId}`}</span>
+                    <span class="font-medium">${students.filter(s => s.id === s.studentId)[0].fullName}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 text-xs bg-gray-100 rounded">#${s.attemptNumber}</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium ${s.grade >= 5 ? 'text-green-600' : s.grade >= 4 ? 'text-blue-600' : s.grade >= 3 ? 'text-orange-600' : 'text-red-600'}">
-                        ${s.grade.toFixed(2)}/6
+                    <span class="font-medium ${(s.score / maxPoints) * 4 + 2 >= 5 ? 'text-green-600' : (s.score / maxPoints) * 4 + 2 >= 4 ? 'text-blue-600' : (s.score / maxPoints) * 4 + 2 >= 3 ? 'text-orange-600' : 'text-red-600'}">
+                        ${((s.score / maxPoints) * 4 + 2).toFixed(2)}/6
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
