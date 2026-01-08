@@ -3,7 +3,7 @@
  * Displays task statistics based on FR-3.2 requirements
  */
 const StatisticsView = {
-    taskId,
+    taskId = await ApiService.getTasks[0].Id,
     // Mock statistics data - matches backend Submission model
     // Grade is on Bulgarian scale: 2 (Слаб) to 6 (Отличен)
     mockTaskStatistics: {
