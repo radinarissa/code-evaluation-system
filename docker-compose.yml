@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # --- 1. APPLICATION DATABASE ---
+  db:
+    image: postgres:latest
+    container_name: codeeval-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=radi
+      - POSTGRES_DB=codeevaluator
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    # The Healthcheck: Checks if Postgres is actually accepting connections
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codeevaluator"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- 2. PGADMIN ---
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: codeeval-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # --- 3. MIGRATION JOB ---
+  migration-job:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: ef-migrator
+    volumes:
+      - .:/src 
+    working_dir: /src
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=codeevaluator;Username=postgres;Password=radi
+      - DOTNET_ROLL_FORWARD=LatestMajor
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: >
+      bash -c "
+      echo 'Cleaning up Mac artifacts...' &&
+      find . -type d -name 'obj' -exec rm -rf {} + &&
+      find . -type d -name 'bin' -exec rm -rf {} + &&
+      dotnet tool install --global dotnet-ef &&
+      export PATH=\"$$PATH:/root/.dotnet/tools\" &&
+      dotnet restore ./backend/CodeEvaluator.API/CodeEvaluator.API.csproj &&
+      dotnet ef database update --project ./backend/CodeEvaluator.Infrastructure --startup-project ./backend/CodeEvaluator.API --connection \"Host=db;Port=5432;Database=codeevaluator;Username=postgres;Password=radi\"
+      "
+
+  # --- 4. JUDGE0 SERVER ---
+  judge0-server:
+    image: judge0/judge0:latest
+    platform: linux/amd64 # For M4 Pro Rosetta Emulation
+    container_name: judge0-server
+    privileged: true
+    ports:
+      - "2358:2358"
+    depends_on:
+      judge0-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: judge0.conf
+
+  # --- 5. JUDGE0 WORKER ---
+  judge0-worker:
+    image: judge0/judge0:latest
+    platform: linux/amd64
+    container_name: judge0-worker
+    command: ["./scripts/workers"]
+    privileged: true
+    depends_on:
+      judge0-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: judge0.conf
+
+  # --- 6. JUDGE0 INTERNAL DB ---
+  judge0-db:
+    image: postgres:13
+    container_name: judge0-db
+    environment:
+      - POSTGRES_DB=judge0
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=judge0
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U judge0 -d judge0"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- 7. REDIS ---
+  redis:
+    image: redis:7
+    container_name: judge0-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

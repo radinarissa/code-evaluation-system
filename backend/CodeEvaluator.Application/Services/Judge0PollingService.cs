@@ -213,7 +213,7 @@ namespace CodeEvaluator.Application.Services
             try
             {
                 var moodleUrl = "http://localhost:8000";
-                var wsToken = "3c1dac98be6c27f6b04cc90ef1bdd19d"; //moodle token
+                var wsToken = "c071f51ee5eb3d3864d35ff00a155d87"; //moodle token
 
                 if (submission.Task.MoodleAssignmentId == null)
                     throw new Exception("Task.MoodleAssignmentId is null");

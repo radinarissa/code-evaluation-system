@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeEvaluator.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251219085302_FixTaskLimitColumns")]
-    partial class FixTaskLimitColumns
+    [Migration("20260124125005_InitialReal")]
+    partial class InitialReal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -132,6 +132,9 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     b.Property<decimal?>("FinalGrade")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
+
+                    b.Property<int?>("MoodleAttemptNumber")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("MoodleSubmissionId")
                         .HasColumnType("integer");
