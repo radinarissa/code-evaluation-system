@@ -22,14 +22,11 @@ namespace CodeEvaluator.Application.Services
             string username,
             string password)
         {
-            Console.WriteLine("MAMA MU DEEEBA");
+
             var loginUrl = $"{MoodleUrl.TrimEnd('/')}/login/token.php" +
                $"?username={Uri.EscapeDataString(username)}" +
                $"&password={Uri.EscapeDataString(password)}" +
                $"&service={Uri.EscapeDataString(ServiceName)}";
-               Console.WriteLine("MAMA MU DEEEBA");
-
-               Console.WriteLine($"[DEBUG] C# is calling: {loginUrl}");
 
             var response = await _http.PostAsync(loginUrl, null);
 
@@ -69,7 +66,7 @@ namespace CodeEvaluator.Application.Services
                 $"&wsfunction=core_webservice_get_site_info" +
                 $"&moodlewsrestformat=json");
 
-            return siteInfo?.UserId ?? 0;
+            return siteInfo?.userId ?? 0;
         }
 
 private class MoodleTokenResponse
@@ -84,7 +81,7 @@ private class MoodleTokenResponse
     private class SiteInfoResponse
     {
         [JsonPropertyName("userid")]
-        public int UserId { get; set; }
+        public int userId { get; set; }
 
         [JsonPropertyName("username")]
         public string Username { get; set; } = "";

@@ -213,7 +213,7 @@ namespace CodeEvaluator.Application.Services
             try
             {
                 var moodleUrl = "http://localhost:8000";
-                var wsToken = "c071f51ee5eb3d3864d35ff00a155d87"; //moodle token
+                var wsToken = "7d8e0bac0656c9ecc7a919c60cab0480"; //moodle token
 
                 if (submission.Task.MoodleAssignmentId == null)
                     throw new Exception("Task.MoodleAssignmentId is null");
@@ -346,8 +346,14 @@ namespace CodeEvaluator.Application.Services
         }
         private static string Normalize(string? s)
         {
+
             if (string.IsNullOrWhiteSpace(s)) return "";
             return s.Replace("\r\n", "\n").TrimEnd();
+            /*
+            return string.Join("\n", s.Split('\n')
+            .Select(line => line.TrimEnd().Replace("\r", "")))
+            .Trim();
+            */
         }
 
         private static EvaluationVerdict MapJudge0Status(int? statusId)

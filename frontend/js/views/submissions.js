@@ -4,6 +4,30 @@
 const SubmissionsView = {
     submissions: [],
     tasks: [],
+    pollInterval: null,
+
+    initPolling() {
+        if (this.pollInterval) clearInterval(this.pollInterval);
+
+        this.pollInterval = setInterval(async () => {
+            const pendingSubmissions = this.submissions.filter(s => s.status === 'Pending');
+            
+            if (pendingSubmissions.length === 0) {
+                clearInterval(this.pollInterval);
+                return;
+            }
+
+            const updatedData = await ApiService.getEnrichedSubmissions();
+            this.submissions = updatedData;
+            
+            const tableBody = document.getElementById('submissions-table');
+            if (tableBody) {
+                tableBody.innerHTML = this.renderTableRows(this.submissions);
+            }
+            
+            console.log("Polling for updates...");
+        }, 3000);
+    },
 
     /**
      * Render the submissions view
@@ -17,6 +41,10 @@ const SubmissionsView = {
 
         this.submissions = submissions;
         this.tasks = tasks;
+
+        if (submissions.some(s => s.status === 'Pending')) {
+            this.initPolling();
+        }
 
         return `
             <div class="bg-white rounded-lg shadow">

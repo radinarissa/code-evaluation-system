@@ -8,14 +8,16 @@ const Utils = {
      * @returns {string} - Tailwind CSS classes
      */
     getStatusClass(status) {
-        const classes = {
-            'Completed': 'bg-green-100 text-green-800',
-            'Processing': 'bg-blue-100 text-blue-800',
-            'Pending': 'bg-yellow-100 text-yellow-800',
-            'Error': 'bg-red-100 text-red-800'
-        };
-        return classes[status] || 'bg-gray-100 text-gray-800';
-    },
+    const classes = {
+        'Accepted': 'bg-green-100 text-green-800',
+        'Processing': 'bg-blue-100 text-blue-800',
+        'Pending': 'bg-yellow-100 text-yellow-800',
+        'WrongAnswer': 'bg-red-100 text-red-800',
+        'CompilationError': 'bg-orange-100 text-orange-800',
+        'RuntimeError': 'bg-red-200 text-red-900'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-800';
+},
 
     /**
      * Get CSS class for grade display
