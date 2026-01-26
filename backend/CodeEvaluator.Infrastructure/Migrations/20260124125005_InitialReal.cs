@@ -7,29 +7,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeEvaluator.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialReal : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Courses",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MoodleCourseId = table.Column<int>(type: "integer", nullable: false),
-                    Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    AcademicYear = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Semester = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Courses", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
@@ -51,46 +33,19 @@ namespace CodeEvaluator.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CourseEnrollments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CourseId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
-                    Role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    EnrolledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CourseEnrollments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CourseEnrollments_Courses_CourseId",
-                        column: x => x.CourseId,
-                        principalTable: "Courses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CourseEnrollments_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Tasks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CourseId = table.Column<int>(type: "integer", nullable: false),
+                    MoodleCourseId = table.Column<int>(type: "integer", nullable: false),
                     Title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     MaxPoints = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: false, defaultValue: 10.00m),
-                    TimeLimitMs = table.Column<int>(type: "integer", nullable: false, defaultValue: 5000),
-                    MemoryLimitMb = table.Column<int>(type: "integer", nullable: false, defaultValue: 256),
-                    DiskLimitMb = table.Column<int>(type: "integer", nullable: false, defaultValue: 256),
+                    TimeLimitS = table.Column<int>(type: "integer", nullable: false, defaultValue: 3),
+                    MemoryLimitKb = table.Column<int>(type: "integer", nullable: false, defaultValue: 262144),
+                    DiskLimitKb = table.Column<int>(type: "integer", nullable: false, defaultValue: 256),
+                    StackLimitKb = table.Column<int>(type: "integer", nullable: true),
                     CreatedBy = table.Column<int>(type: "integer", nullable: false),
                     CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -102,12 +57,6 @@ namespace CodeEvaluator.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Tasks_Courses_CourseId",
-                        column: x => x.CourseId,
-                        principalTable: "Courses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Tasks_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -177,6 +126,7 @@ namespace CodeEvaluator.Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TaskId = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false),
+                    AttemptNumber = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
                     SubmissionTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     Code = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
@@ -186,6 +136,7 @@ namespace CodeEvaluator.Infrastructure.Migrations
                     EvaluationStartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     EvaluationCompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     MoodleSubmissionId = table.Column<int>(type: "integer", nullable: true),
+                    MoodleAttemptNumber = table.Column<int>(type: "integer", nullable: true),
                     MoodleSyncStatus = table.Column<string>(type: "text", nullable: true),
                     MoodleSyncOutput = table.Column<string>(type: "text", nullable: true),
                     MoodleSyncCreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -274,23 +225,6 @@ namespace CodeEvaluator.Infrastructure.Migrations
                 column: "TaskId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CourseEnrollments_CourseId_UserId",
-                table: "CourseEnrollments",
-                columns: new[] { "CourseId", "UserId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CourseEnrollments_UserId",
-                table: "CourseEnrollments",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Courses_MoodleCourseId",
-                table: "Courses",
-                column: "MoodleCourseId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ReferenceSolutions_TaskId",
                 table: "ReferenceSolutions",
                 column: "TaskId");
@@ -301,19 +235,39 @@ namespace CodeEvaluator.Infrastructure.Migrations
                 column: "UploadedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Submissions_MoodleSyncStatus",
+                table: "Submissions",
+                column: "MoodleSyncStatus");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Submissions_Status",
+                table: "Submissions",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Submissions_SubmissionTime",
+                table: "Submissions",
+                column: "SubmissionTime");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Submissions_TaskId",
                 table: "Submissions",
                 column: "TaskId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Submissions_TaskId_UserId_AttemptNumber",
+                table: "Submissions",
+                columns: new[] { "TaskId", "UserId", "AttemptNumber" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Submissions_TaskId_UserId_SubmissionTime",
+                table: "Submissions",
+                columns: new[] { "TaskId", "UserId", "SubmissionTime" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Submissions_UserId",
                 table: "Submissions",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tasks_CourseId",
-                table: "Tasks",
-                column: "CourseId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_CreatedBy",
@@ -325,6 +279,11 @@ namespace CodeEvaluator.Infrastructure.Migrations
                 table: "Tasks",
                 column: "MoodleAssignmentId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_MoodleCourseId",
+                table: "Tasks",
+                column: "MoodleCourseId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TestCases_TaskId",
@@ -361,9 +320,6 @@ namespace CodeEvaluator.Infrastructure.Migrations
                 name: "AdditionalFiles");
 
             migrationBuilder.DropTable(
-                name: "CourseEnrollments");
-
-            migrationBuilder.DropTable(
                 name: "ReferenceSolutions");
 
             migrationBuilder.DropTable(
@@ -377,9 +333,6 @@ namespace CodeEvaluator.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tasks");
-
-            migrationBuilder.DropTable(
-                name: "Courses");
 
             migrationBuilder.DropTable(
                 name: "Users");

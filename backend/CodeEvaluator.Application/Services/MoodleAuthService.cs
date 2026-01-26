@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using CodeEvaluator.Application.DTOs;
 using CodeEvaluator.Application.Interfaces.Services;
+using System.Text.Json.Serialization;
 
 namespace CodeEvaluator.Application.Services
 {
@@ -10,7 +11,7 @@ namespace CodeEvaluator.Application.Services
 
         private const string MoodleUrl = "http://localhost:8000";
 
-        private const string ServiceName = "DotNetAuth"; //промени тук ако еxternal service-ти се казва по друг начин
+        private const string ServiceName = "moodle_mobile_app"; //промени тук ако еxternal service-ти се казва по друг начин
 
         public MoodleAuthService(HttpClient http)
         {
@@ -21,10 +22,13 @@ namespace CodeEvaluator.Application.Services
             string username,
             string password)
         {
-            var response = await _http.PostAsync(
-                $"{MoodleUrl}/login/token.php?service={ServiceName}" +
-                $"&username={username}&password={password}",
-                null);
+
+            var loginUrl = $"{MoodleUrl.TrimEnd('/')}/login/token.php" +
+               $"?username={Uri.EscapeDataString(username)}" +
+               $"&password={Uri.EscapeDataString(password)}" +
+               $"&service={Uri.EscapeDataString(ServiceName)}";
+
+            var response = await _http.PostAsync(loginUrl, null);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -62,20 +66,26 @@ namespace CodeEvaluator.Application.Services
                 $"&wsfunction=core_webservice_get_site_info" +
                 $"&moodlewsrestformat=json");
 
-            return siteInfo?.UserId ?? 0;
+            return siteInfo?.userId ?? 0;
         }
 
-        private class MoodleTokenResponse
-        {
-            public string? Token { get; set; }
-            public string? Error { get; set; }
-        }
+private class MoodleTokenResponse
+    {
+        [JsonPropertyName("token")]
+        public string? Token { get; set; }
 
-        private class SiteInfoResponse
-        {
-            public int UserId { get; set; }
-            public string Username { get; set; } = "";
-        }
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
+    }
+
+    private class SiteInfoResponse
+    {
+        [JsonPropertyName("userid")]
+        public int userId { get; set; }
+
+        [JsonPropertyName("username")]
+        public string Username { get; set; } = "";
+    }
 
     }
 

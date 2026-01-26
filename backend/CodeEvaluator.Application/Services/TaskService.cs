@@ -51,131 +51,118 @@ namespace CodeEvaluator.Application.Services
         }
 
         public async Task<Domain.Entities.Task> UpsertFromMoodleAsync(MoodleTaskUpsertDto dto)
+{
+    MoodleUserDto teacherDto;
+
+    if (dto.Teacher != null && dto.Teacher.MoodleId > 0)
+    {
+        teacherDto = dto.Teacher;
+    }
+    else if (dto.MoodleTeacherUserId.HasValue && dto.MoodleTeacherUserId.Value > 0)
+    {
+        teacherDto = new MoodleUserDto
         {
-            var hasTaskId = dto.TaskId.HasValue && dto.TaskId.Value > 0;
-            if (!hasTaskId)
+            MoodleId = dto.MoodleTeacherUserId.Value,
+            Role = "Teacher",
+            Username = "",
+            Email = "",
+            FirstName = "",
+            LastName = ""
+        };
+    }
+    else
+    {
+        throw new InvalidOperationException("Teacher MoodleId is required.");
+    }
+
+    teacherDto.Role = string.IsNullOrWhiteSpace(teacherDto.Role) ? "Teacher" : teacherDto.Role;
+    var teacher = await _userService.UpsertFromMoodleAsync(teacherDto);
+
+    Domain.Entities.Task? task = null;
+
+    if (dto.MoodleAssignmentId.HasValue && dto.MoodleAssignmentId > 0)
+    {
+        task = await _db.Tasks.Include(t => t.TestCases)
+            .FirstOrDefaultAsync(t => t.MoodleAssignmentId == dto.MoodleAssignmentId.Value);
+    }
+
+    if (task == null && dto.TaskId.HasValue && dto.TaskId > 0)
+    {
+        task = await _db.Tasks.Include(t => t.TestCases)
+            .FirstOrDefaultAsync(t => t.Id == dto.TaskId.Value);
+    }
+
+    if (task == null)
+    {
+        if (!dto.MoodleCourseId.HasValue || dto.MoodleCourseId.Value <= 0) 
+            throw new InvalidOperationException("MoodleCourseId is required when creating a task.");
+        if (string.IsNullOrWhiteSpace(dto.MoodleAssignmentName)) 
+            throw new InvalidOperationException("MoodleAssignmentName is required when creating a task.");
+
+        task = new Domain.Entities.Task
+        {
+            MoodleCourseId = dto.MoodleCourseId.Value,
+            MoodleAssignmentId = dto.MoodleAssignmentId,
+            MoodleAssignmentName = dto.MoodleAssignmentName,
+            Title = dto.Title,
+            Description = dto.Description,
+            MaxPoints = dto.MaxPoints,
+            TimeLimitS = dto.TimeLimitS,
+            MemoryLimitKb = dto.MemoryLimitKb,
+            DiskLimitKb = dto.DiskLimitKb,
+            StackLimitKb = dto.StackLimitKb,
+            CreatedBy = teacher.Id,
+            IsActive = true,
+            CreationDate = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        _db.Tasks.Add(task);
+    }
+    else
+    {
+        if (dto.MoodleCourseId.HasValue && dto.MoodleCourseId.Value > 0) task.MoodleCourseId = dto.MoodleCourseId.Value;
+        if (dto.MoodleAssignmentId.HasValue && dto.MoodleAssignmentId.Value > 0) task.MoodleAssignmentId = dto.MoodleAssignmentId.Value;
+        if (!string.IsNullOrWhiteSpace(dto.MoodleAssignmentName)) task.MoodleAssignmentName = dto.MoodleAssignmentName;
+
+        task.Title = dto.Title;
+        task.Description = dto.Description;
+        task.MaxPoints = dto.MaxPoints;
+        task.TimeLimitS = dto.TimeLimitS;
+        task.MemoryLimitKb = dto.MemoryLimitKb;
+        task.DiskLimitKb = dto.DiskLimitKb;
+        task.StackLimitKb = dto.StackLimitKb;
+        task.UpdatedAt = DateTime.UtcNow;
+    }
+
+    // --- 4. Test Case Syncing ---
+    if (dto.TestCases != null)
+    {
+        // Guard against accidental wipes
+        if (dto.TestCases.Count == 0 && task.TestCases.Any())
+            throw new InvalidOperationException("Refusing to replace existing testcases with an empty list.");
+
+        // Clear existing and replace with new set from Moodle
+        _db.TestCases.RemoveRange(task.TestCases);
+        task.TestCases.Clear();
+
+        foreach (var tc in dto.TestCases.OrderBy(x => x.ExecutionOrder))
+        {
+            task.TestCases.Add(new TestCase
             {
-                if (!dto.MoodleAssignmentId.HasValue || dto.MoodleAssignmentId.Value <= 0)
-                    throw new InvalidOperationException("MoodleAssignmentId is required when TaskId is not provided.");
-            }
-
-            MoodleUserDto teacherDto;
-
-            if (dto.Teacher != null && dto.Teacher.MoodleId > 0)
-            {
-                teacherDto = dto.Teacher;
-            }
-            else if (dto.MoodleTeacherUserId.HasValue && dto.MoodleTeacherUserId.Value > 0)
-            {
-                // Minimal teacher info
-                teacherDto = new MoodleUserDto
-                {
-                    MoodleId = dto.MoodleTeacherUserId.Value,
-                    Role = "Teacher",
-                    Username = "",
-                    Email = "",
-                    FirstName = "",
-                    LastName = ""
-                };
-            }
-            else
-            {
-                throw new InvalidOperationException("Teacher MoodleId is required (teacher.moodleId or moodleTeacherUserId).");
-            }
-
-            teacherDto.Role = string.IsNullOrWhiteSpace(teacherDto.Role) ? "Teacher" : teacherDto.Role;
-            var teacher = await _userService.UpsertFromMoodleAsync(teacherDto);
-
-            Domain.Entities.Task? task = null;
-
-            // Prefer TaskId if provided (binding existing backend task)
-            if (hasTaskId)
-            {
-                task = await _db.Tasks.Include(t => t.TestCases)
-                    .SingleOrDefaultAsync(t => t.Id == dto.TaskId!.Value);
-            }
-            else
-            {
-                task = await _db.Tasks.Include(t => t.TestCases)
-                    .SingleOrDefaultAsync(t => t.MoodleAssignmentId == dto.MoodleAssignmentId!.Value);
-            }
-
-            if (task == null)
-            {
-                // If creating from Moodle, require mapping fields:
-                if (!dto.MoodleCourseId.HasValue || dto.MoodleCourseId.Value <= 0) throw new InvalidOperationException("MoodleCourseId is required when creating a task from Moodle.");
-                if (string.IsNullOrWhiteSpace(dto.MoodleAssignmentName)) throw new InvalidOperationException("MoodleAssignmentName is required when creating a task from Moodle.");
-
-                task = new Domain.Entities.Task
-                {
-                    MoodleCourseId = dto.MoodleCourseId.Value,
-                    MoodleAssignmentId = dto.MoodleAssignmentId,
-                    MoodleAssignmentName = dto.MoodleAssignmentName,
-                    Title = dto.Title,
-                    Description = dto.Description,
-                    MaxPoints = dto.MaxPoints,
-                    TimeLimitS = dto.TimeLimitS,
-                    MemoryLimitKb = dto.MemoryLimitKb,
-                    DiskLimitKb = dto.DiskLimitKb,
-                    StackLimitKb = dto.StackLimitKb,
-                    CreatedBy = teacher.Id,
-                    IsActive = true,
-                    CreationDate = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                };
-
-                _db.Tasks.Add(task);
-                await _db.SaveChangesAsync();
-            }
-            else
-            {
-                //Only update mapping if present
-                if (dto.MoodleCourseId.HasValue && dto.MoodleCourseId.Value > 0) task.MoodleCourseId = dto.MoodleCourseId.Value;
-
-                if (dto.MoodleAssignmentId.HasValue && dto.MoodleAssignmentId.Value > 0) task.MoodleAssignmentId = dto.MoodleAssignmentId.Value;
-
-                if (!string.IsNullOrWhiteSpace(dto.MoodleAssignmentName)) task.MoodleAssignmentName = dto.MoodleAssignmentName;
-
-                // task.MoodleCourseId = dto.MoodleCourseId;
-                // task.MoodleAssignmentId = dto.MoodleAssignmentId;
-                // task.MoodleAssignmentName = dto.MoodleAssignmentName;
-                task.Title = dto.Title;
-                task.Description = dto.Description;
-                task.MaxPoints = dto.MaxPoints;
-                task.TimeLimitS = dto.TimeLimitS;
-                task.MemoryLimitKb = dto.MemoryLimitKb;
-                task.DiskLimitKb = dto.DiskLimitKb;
-                task.StackLimitKb = dto.StackLimitKb;
-                task.UpdatedAt = DateTime.UtcNow;
-
-                // _db.TestCases.RemoveRange(task.TestCases);
-                // task.TestCases.Clear();
-            }
-            if (dto.TestCases != null)
-            {
-                if (dto.TestCases.Count == 0)
-                    throw new InvalidOperationException("Refusing to replace testcases with empty list.");
-
-                _db.TestCases.RemoveRange(task.TestCases);
-                task.TestCases.Clear();
-
-                foreach (var tc in dto.TestCases.OrderBy(x => x.ExecutionOrder))
-                {
-                    task.TestCases.Add(new TestCase
-                    {
-                        Name = tc.Name,
-                        Input = tc.Input ?? "",
-                        ExpectedOutput = tc.ExpectedOutput ?? "",
-                        IsPublic = tc.IsPublic,
-                        Points = tc.Points,
-                        ExecutionOrder = tc.ExecutionOrder
-                    });
-                }
-            }
-
-            await _db.SaveChangesAsync();
-            return task;
+                Name = tc.Name,
+                Input = tc.Input ?? "",
+                ExpectedOutput = tc.ExpectedOutput ?? "",
+                IsPublic = tc.IsPublic,
+                Points = tc.Points,
+                ExecutionOrder = tc.ExecutionOrder
+            });
         }
+    }
+
+    await _db.SaveChangesAsync();
+    return task;
+}
 
 
         public async Task<TaskResponseDto?> GetTaskByIdAsync(int id)
@@ -280,6 +267,19 @@ namespace CodeEvaluator.Application.Services
 
             return await GetTaskByIdAsync(task.Id) ?? throw new Exception("Created task not found");
         }
+
+        public async Task<List<TaskLookupDto>> GetTaskLookupAsync()
+        {
+           return await _db.Tasks
+          .Where(t => t.IsActive)
+           .OrderByDescending(t => t.UpdatedAt)
+           .Select(t => new TaskLookupDto 
+           { 
+            Id = t.Id, 
+            Title = t.Title ?? t.MoodleAssignmentName ?? "Untitled Task" 
+           })
+           .ToListAsync();
+      }
 
         public async Task<TaskResponseDto?> UpdateTaskAsync(int id, TaskUpsertDto dto, int updatedByUserId)
         {

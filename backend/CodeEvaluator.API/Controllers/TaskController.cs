@@ -22,6 +22,7 @@ namespace CodeEvaluator.API.Controllers
         /// Returns all tasks.
         /// </summary>
         [HttpGet]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllTasks()
         {
@@ -33,6 +34,7 @@ namespace CodeEvaluator.API.Controllers
         /// Returns a single task by its id.
         /// </summary>
         [HttpGet("{id}")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTaskById(int id)
