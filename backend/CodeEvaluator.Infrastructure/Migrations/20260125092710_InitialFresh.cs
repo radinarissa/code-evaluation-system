@@ -5,7 +5,7 @@
 namespace CodeEvaluator.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class MoodleTaskUpsert : Migration
+    public partial class InitialFresh : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

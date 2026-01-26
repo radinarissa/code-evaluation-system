@@ -30,7 +30,6 @@ namespace CodeEvaluator.API.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
             var result = await _moodleAuth.AuthenticateAsync(request.Username, request.Password);
-
             if (!result.Success)
             {
                 return Unauthorized(new LoginResponseDto

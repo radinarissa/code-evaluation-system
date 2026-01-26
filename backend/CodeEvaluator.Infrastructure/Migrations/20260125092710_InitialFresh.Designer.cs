@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeEvaluator.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251230091656_AddMoodleAttemptNumberToSubmission")]
-    partial class AddMoodleAttemptNumberToSubmission
+    [Migration("20260125092710_InitialFresh")]
+    partial class InitialFresh
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

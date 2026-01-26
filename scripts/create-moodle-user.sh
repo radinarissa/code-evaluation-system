@@ -50,3 +50,9 @@ try {
     exit(1);
 }
 "
+
+echo "Configuring CodeEval Backend URL..."
+docker exec "$CONTAINER_NAME" php admin/cli/cfg.php \
+    --component=assignsubmission_codeeval \
+    --name=backend_url \
+    --set="http://host.docker.internal:5218"
